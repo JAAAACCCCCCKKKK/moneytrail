@@ -55,7 +55,8 @@ code; where something is missing, ask the team rather than inventing it.
 ```markdown
 # <Team name>: method
 
-## Problem and data
+## Team (name, captain, every member)
+## Problem and data sources (organiser data only, or anything else approved)
 ## How we handled the data (traps, USD values, one row per transaction)
 ## How we tested honestly (the split, and why)
 ## Features, grouped, each with why it should work
@@ -63,9 +64,13 @@ code; where something is missing, ask the team rather than inventing it.
 ## Results (honest test and leaderboard, with the final commit)
 ## What didn't work
 ## Limitations (false positives, synthetic data, ambiguous cases)
-## Pre-existing components and AI disclosure (libraries, templates, AI tools: model, provider, prompts, settings)
-## How to reproduce (exact command)
+## Third-party and pre-existing components (libraries, models, services, our pre-hackathon notes and skills, each with source and licence)
+## AI disclosure (tools, model, provider, prompts or skill files, settings, any limits on reproducing that part)
+## How to reproduce (exact command, dependencies, computing requirements, where the trained model files are)
 ```
+
+The participant terms require every one of these sections, so don't drop one to
+save space; keep it short instead.
 
 Keep the language plain and the claims modest: this is synthetic data, and a high
 score here doesn't prove a method works on real financial crime.
