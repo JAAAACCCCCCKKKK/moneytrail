@@ -1,0 +1,10 @@
+# Top-level dependencies (Python 3.12). Exact pinned versions: requirements-lock.txt
+pandas
+pyarrow
+networkx
+scikit-learn
+lightgbm
+xgboost
+shap
+matplotlib
+jupyter

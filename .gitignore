@@ -1,0 +1,18 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Data / outputs (do not commit raw data)
+data/
+*.parquet
+*.csv
+*.pkl
+*.model
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
