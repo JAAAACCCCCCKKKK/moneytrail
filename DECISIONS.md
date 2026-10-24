@@ -903,6 +903,43 @@ fall on both sides inflates the score.
   a link model trained on the training week's `scenario_id` ("are these two payments in the same
   scheme?", a training target only), then cluster test payments with it and score whole clusters.
 
+### ~15:10 — Learned relay grouping on the gate (Alim, with Claude Code; captain's call to try it)
+- **Change:** new `src/relay_groups.py`; new option `src.blend --relay <file>` (multiplies the gate
+  before the 10% Violet mix; without it the 67.8 file still recreates byte for byte).
+  1. Candidate links: money into a wallet and money out of it within 6 h (~240,000 per week), and
+     repeats of the same pair (at most 6 a week). 2. A LightGBM link model learns "same scheme?"
+     (`scenario_id` only as the training target), out of fold on the gate's folds: link AP 0.90.
+  3. Around each repeating pair the model joins across days, each repeat's directly linked payments
+     form one burst; per burst, money out of the pair's wallets ÷ money in, and whether it left after
+     it arrived. 4. Where the structure model says "not a planted shape scheme" (< 0.3): backward
+     schemes × e^-4, forward ones × e^(4 × (steadiness rank − 0.5)).
+- **On the way:** plain linking of strong links snowballs into one group of 13,000-20,000 payments;
+  keeping each payment's top links splits schemes; anchoring on repeating pairs works (forward vs
+  backward relay AUC 0.91-0.95, against 0.64 without the learned links). Pushing down without the
+  structure filter hit 59 easy or medium suspicious payments (−0.4). A small model on the grouped
+  relays' clues: no signal (AP 0.018 against chance 0.013).
+- **Honest test** (out-of-fold everywhere; gate + 10% Violet as in the 67.8 entry, 63.72): with
+  conversion clues in the link model **64.16** (folds 64.28 → 64.71 ± 5.16, better in 5 of 5); hard
+  relays' median rank 12,638 → 11,362. **Without** conversion and same-asset clues (the version
+  built): link AP 0.80, **63.97** (folds 64.54 ± 5.21, better in 5 of 5). Ceiling with true grouping
+  66.4.
+- **Why the version without conversion clues:** with them, only 1.6% of test payments landed in a
+  relay scheme against ~23% of training ones; strong hand-on links fell from 9.0% to 3.9%. Repeating
+  pairs carry more conversions in the test week (54% vs 37%) and wider amount ratios between hops;
+  timing is the same in both weeks. Without those clues: 19% train, 7.6% test. Dropping dollar
+  amounts and hour of day as well: 63.95-64.03, test 5.5-6.2%, so not taken.
+- **Test file:** `python3 -m src.relay_groups` (writes `outputs/relay_multiplier.csv`, 12 s), then
+  `python3 -m src.blend --gate --weight 0.1 --run3 predictions_union_prob.csv --violet
+  predictions_violet_v2_fixed.csv --structure predictions_structure_prob.csv --relay
+  relay_multiplier.csv --out predictions_gate_relay_v10.csv`. Test week: 5.1% of payments pushed
+  down, 1.7% lifted. Rank correlation with the 67.8 file 0.980; **all 401 of the top 1% shared**, so
+  the change is entirely below the top 1%. Passes the checker; the multiplier reruns byte-identical
+  under a different hash seed.
+- **Leaderboard:** not uploaded yet.
+- **Decision:** upload as a probe. Below our 1.5-point rule (+0.25 to +0.44), but consistent in 5 of
+  5 folds and it changes nothing in the top 1%, so the risk is small. The 67.8 file stays the final
+  entry unless this beats it.
+
 ## External data
 
 Every dataset we use that didn't come from the organisers. Required by the organisers' rules
@@ -927,8 +964,8 @@ learning only and are not used by any of our code; see `prep/RESEARCH.md`.
   in the 13:45 entry), `tools/track_outputs.py`, `tools/check_zip_limits.py`, the release workflow
   `.github/workflows/release.yml`, and the gate options in `src/blend.py` and `src/predict_union.py`;
   run the 13:40 analysis of lost points and hard relays; merge Jack's branch and find and fix the
-  hash-seed bug in `features_shape_signals.py` (14:10); run the 14:55 and 15:00 hard-relay
-  experiment (including rebuilding the gate's out-of-fold scores); and draft this log. Settings: default Claude
+  hash-seed bug in `features_shape_signals.py` (14:10); run the 14:55, 15:00 and 15:10 hard-relay
+  experiments (including rebuilding the gate's out-of-fold scores) and write `src/relay_groups.py` and the `--relay` option in `src/blend.py`; and draft this log. Settings: default Claude
   Code configuration, no custom temperature or sampling parameters. Prompts: the conversation
   was interactive; the reusable prompts are the three skill files in `.claude/skills/`, which
   are kept in this repo.

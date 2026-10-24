@@ -83,10 +83,14 @@ def main():
     parser.add_argument("--smooth", type=float, default=0.0,
                         help="with --gate: share of the multi-scale gap-cluster mean in the gate score (e.g. 0.2)")
     parser.add_argument("--week", default="test-data", help="data/<week> the files score (for --smooth)")
+    parser.add_argument("--relay", default=None,
+                        help="with --gate: relay multiplier file inside outputs/ (src.relay_groups), applied to the gate")
     parser.add_argument("--out", default="predictions_blend_run3_violet.csv", help="file name inside outputs/")
     args = parser.parse_args()
     if args.gate and not args.structure:
         parser.error("--gate needs --structure")
+    if args.relay and not args.gate:
+        parser.error("--relay needs --gate")
 
     a = pd.read_csv(OUTPUTS / args.run3)
     b = pd.read_csv(OUTPUTS / args.violet)
@@ -100,6 +104,9 @@ def main():
         gated = np.log(d.score_run3.clip(1e-9, 1)) + args.gate_power * np.log(st.clip(1e-9, 1))
         if args.smooth > 0:
             gated = smooth_gate(gated, d.TRANSACTION_HASH, args.smooth, args.week)
+        if args.relay:
+            mult = pd.read_csv(OUTPUTS / args.relay).set_index("TRANSACTION_HASH").score.loc[d.TRANSACTION_HASH]
+            gated = gated + np.log(mult.reset_index(drop=True))
         blended = (1 - args.weight) * rank01(gated) + args.weight * rank01(d.score_violet)
     else:
         blended = (1 - args.weight) * rank01(d.score_run3) + args.weight * rank01(d.score_violet)
