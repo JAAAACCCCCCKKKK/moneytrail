@@ -11,16 +11,23 @@ Rules this file follows (from the team plan):
 import numpy as np
 import pandas as pd
 
-# ASSUMPTION: these are the clean-table column names. Alim's clean tables were
-# not available when this was drafted, so change the right-hand names here to
-# match data/clean/*_payments.parquet. Nothing else in the file needs to change.
+# Column names as given by the team lead: FROM_ADDRESS, TO_ADDRESS,
+# TIMESTAMP (whole seconds) and VALUE. Not yet checked against the real clean
+# table: confirm that VALUE is already in US dollars, not the asset's own units.
 COLS = {
     "hash": "TRANSACTION_HASH",
-    "sender": "SENDER",
-    "receiver": "RECEIVER",
-    "time": "DATETIME",
-    "usd": "USD_VALUE",
+    "sender": "FROM_ADDRESS",
+    "receiver": "TO_ADDRESS",
+    "time": "TIMESTAMP",
+    "usd": "VALUE",
 }
+
+
+def parse_time(series):
+    """Numeric timestamps are seconds since 1970; anything else is parsed as a date."""
+    if pd.api.types.is_numeric_dtype(series):
+        return pd.to_datetime(series, unit="s")
+    return pd.to_datetime(series)
 
 NEW_COLUMNS = [
     "wallet_sender_age_hours",
@@ -38,7 +45,7 @@ def add_features(payments, week):
     c = COLS
     df = payments[[c["hash"], c["sender"], c["receiver"], c["time"], c["usd"]]].copy()
     df.columns = ["TRANSACTION_HASH", "sender", "receiver", "time", "usd"]
-    df["time"] = pd.to_datetime(df["time"])
+    df["time"] = parse_time(df["time"])
     df["usd"] = pd.to_numeric(df["usd"], errors="coerce")
     df["rid"] = np.arange(len(df))  # original position, so the output keeps input order
 
