@@ -9,10 +9,12 @@ fall on both sides inflates the score.
 
 ## Where we are now (update this after every upload)
 
-- **Best leaderboard score: 65.1** (run 7, Violet's detector v2 alone, commit `69ff81b`,
-  `outputs/predictions_violet_v2.csv`). Run 3 (Jack's shape model) 62.0; run 4 60.8, dropped.
-- **Run 8 candidate: 50/50 rank blend of run 3 and Violet v2** (`python3 -m src.blend`). Honest
-  test 58.6 against 57.4 (Violet) and 56.8 (run 3), better than either model in 4 of 5 folds.
+- **Best leaderboard score: 65.5** (attempt 9, 50/50 blend of run 3 and Violet v2, commit
+  `b3b0d5a`, `python3 -m src.blend`). Top 1%: precision 92%, recall 30%. Violet v2 alone 65.1;
+  run 3 alone 62.0.
+- **Open problem for the final entry:** a fresh rerun of Violet's model on Alim's laptop differs
+  from her committed file (rank correlation 0.96, 371 of the top 401 shared). The final upload
+  must be a file our code reproduces, so this needs fixing (or the final file regenerated) by 15:30.
 - **Main pipeline: Jack's `src/`** (`python3 -m src.train`). Honest test 54.9 (folds 57.3 ± 9.9).
   `main.py` is kept only for comparison.
 - **New clues go into the `src/` pipeline.** After changing features, delete `data/cache/`
@@ -390,6 +392,13 @@ fall on both sides inflates the score.
   1,250: 89% (run 3), 92% (Violet), 94% (blend).
 - **Leaderboard:** Violet's v2 alone scored 65.1 (run 7), 3 points above run 3, so the weight
   moved from 25% to 50% (the honest test is flat between them). The blend is not uploaded yet.
+- **Leaderboard (update):** uploaded as attempt 9: **65.5**, +0.4 on Violet alone and +3.5 on
+  run 3. Smaller than the honest-test gain (+1.2), but in the same direction.
+- **By shape (honest test, share of easy payments in the top 1,250, blend):** bipartite 94%,
+  chain 100%, cycle 100%, fan-in 82%, fan-out 92%, fan-out-in 99%, multi-stage 93%, random 88%,
+  stack 94%. Medium is weak for every shape: 0-31% (best stack 31%, fan-in 22%, multi-stage 17%;
+  bipartite, chain, cycle, fan-out and random 0%). Violet's model alone is better on fan-in
+  (90%), random (98%) and stack (98%); run 3 ranks chains and cycles higher.
 - **Decision:** upload the 50/50 blend as run 8. Violet's own blend file
   (`predictions_blend_violetv2_jackv3.csv`) uses run 4's model, which scored worse; don't upload it.
 

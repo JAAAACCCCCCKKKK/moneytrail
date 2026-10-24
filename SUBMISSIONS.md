@@ -8,3 +8,5 @@
 | ~11:30 UTC | a265fa9 | 57.7 vs run 3's 56.5 (main.py folds, seed 42) | **60.8** (top 1%: precision 89%, recall 29%) | Run 4, uploaded by Jack as "TEST 3": run 3 + 20-minute group window + 6x medium training weight. Worse than run 3; dropped |
 | ? | ? | ? | ~62 and ~61.5 (from the team page chart) | Runs 5 and 6: not logged yet. Whoever uploaded them, please fill in what they were |
 | ~12:15 BST | 69ff81b | 57.4 (Violet's own folds 58.4 ± 7.2; on main.py folds 57.1 ± 7.2) | **65.1** (top 1%: easy 40%, medium 0%) | Run 7: Violet's detector v2 alone (`outputs/predictions_violet_v2.csv`, `python3 detector/predict.py`). New best |
+| ? | ? | ? | ~61.6 (from the team page chart) | Attempt 8: not logged yet. Whoever uploaded it, please fill in what it was |
+| ~12:35 BST | b3b0d5a | 58.6 (blend of out-of-fold scores; folds 58.9 ± 6.3) | **65.5** (top 1%: precision 92%, recall 30%; easy 50%, medium 0%) | Attempt 9 ("Run 9"): 50/50 rank blend of run 3 and Violet v2 (`python3 -m src.blend`). New best, +0.4 on Violet alone |
