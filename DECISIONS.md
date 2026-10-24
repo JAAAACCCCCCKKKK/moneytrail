@@ -802,6 +802,19 @@ fall on both sides inflates the score.
   so our honest test can no longer judge refinements of the gate. **67.8
   (`predictions_gate_v10.csv`) is the final entry.**
 
+### ~14:50 — Averaging seeds and model kinds on the 67.8 gate (Violet, with Claude)
+- **Change:** `src/predict_union.py --seeds N` averages LightGBM over seeds 42, 43, ...; `--xgb` also
+  trains XGBoost (400 trees, depth 6, same sampling) on the same seeds and averages it 50/50 with
+  LightGBM. Defaults (1 seed, no XGBoost) leave the 67.8 recipe unchanged.
+- **Why:** variance reduction rather than fitting the training week harder, since honest-test gains
+  from fitting harder (gate 2, smoothing) lost on the leaderboard.
+- **Honest test:** not measured (time); files compared with the 67.8 upload instead: top-401 overlap
+  391 (seeds) and 389 (seeds + XGBoost).
+- **Leaderboard:** 5 LightGBM seeds `predictions_gate_v10_s5.csv` **67.7**; 5 LightGBM + 5 XGBoost
+  seeds `predictions_gate_v10_s5x.csv` **67.5** (both precision 96%). 67.8 single seed.
+- **Decision:** dropped. Seed noise isn't what limits the gate; a second model kind doesn't add
+  information on the same clues. 67.8 stays the final entry.
+
 ## External data
 
 Every dataset we use that didn't come from the organisers. Required by the organisers' rules
