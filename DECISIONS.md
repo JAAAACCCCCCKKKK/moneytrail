@@ -9,13 +9,13 @@ fall on both sides inflates the score.
 
 ## Where we are now (update this after every upload)
 
-- **Best leaderboard score: 61.4** (run 2, commit `bbf8675`). Top 1%: precision 93%, recall 30%.
+- **Best leaderboard score: 62.0** (run 3, commit `6641b38`). Top 1%: precision 91%, recall 29%.
 - **Main pipeline: Jack's `src/`** (`python3 -m src.train`). Honest test 54.9 (folds 57.3 ± 9.9).
   `main.py` is kept only for comparison.
 - **New clues go into the `src/` pipeline.** After changing features, delete `data/cache/`
   or the old cached features are reused.
-- **Run 3 candidate:** Jack's `python3 -m src.predict_shapes_v2` (typology detectors, group
-  smoothing, rank blend), honest test 57.6 ± 6.1 on `main.py`'s folds. Not uploaded yet.
+- **Current best pipeline:** Jack's `python3 -m src.predict_shapes_v2` (typology detectors,
+  group smoothing, rank blend), honest test 57.6 ± 6.1 on `main.py`'s folds.
 - **Priority:** easy and medium cases first (about 84 of the 100 points live there; half the
   easy cases are still outside our top 1%). Hard relays from 14:30. Whole-week guilt by
   association was tried and dropped (11:45); the next hard-case idea is how a payment relates
@@ -188,9 +188,11 @@ fall on both sides inflates the score.
   correlation with run 2's test scores 0.865; top-401 overlap 340.
 - **For Alim:** `main.py` has no group smoothing yet, and it was worth about 2.7 points here;
   `graph.smooth_by_group(scores, payments, week)` is ready to call on the test scores.
-- **Leaderboard:** not uploaded.
-- **Decision:** kept as the run 3 candidate; the leaderboard decides whether the one-point gain
-  is real.
+- **Leaderboard:** run 3, 10:39 UTC, commit `6641b38` (rerun on Alim's laptop gave a byte-identical
+  file). Score **62.0** (run 2 was 61.4). Top 1%: precision 91%, recall 29%. Caught in the top 1%:
+  easy 40%, medium 10%, observable hard 0%, ambiguous 0%.
+- **Decision:** kept, now our best. The gain is small (0.6 points), matching the honest test's
+  one point; medium moved into the top 1% (0% → 10%).
 
 ### ~11:45 — Guilt by association, two rounds, whole-week neighbours (Alim)
 - **Change:** `src/stage2.py`. Round 1 is run 2's model; its scores become 12 neighbour clues per payment (mean, max and count of scores for money into the sender, the sender's other outgoing, the receiver's other incoming, and money out of the receiver, leaving the payment itself out). Round 2 retrains with them. Nested honest test on `src.train`'s folds: round 1 is retrained inside every fold, with an inner out-of-fold split, so no clue sees a held-out answer.
