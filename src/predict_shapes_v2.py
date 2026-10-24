@@ -20,6 +20,10 @@ the leaderboard):
   --long-groups      add 30-minute, 1-hour and 2-hour motif clues (features_motifs_long.py).
   --once-groups      add slow-scheme clues: wallet groups at 30 and 60 minutes linked only
                      through once-a-week payment pairs (features_motifs_once.py).
+  --signals          add the deck signals the other clue files missed (features_shape_signals.py):
+                     quiet and new fan-in senders, recipients' forwarding speed, scatter-gather
+                     value balance, quiet middles and hold times, bipartite outside contacts,
+                     loop duration, middle wallets used once, routes, value in vs out of a group.
   --self-train       one round of self-training on the test week: take our own top 2% of
                      test scores as suspicious and the bottom 50% as innocent, at half
                      weight, retrain, and score again. Uses only our predictions, never test
@@ -40,6 +44,7 @@ from main import build_features, make_model, OUTPUTS
 MODULES = ["features_starter", "features_shapes"]
 LONG_MODULE = "features_motifs_long"
 ONCE_MODULE = "features_motifs_once"
+SIGNALS_MODULE = "features_shape_signals"
 BLEND = 0.25
 PSEUDO_TOP, PSEUDO_BOTTOM, PSEUDO_WEIGHT = 0.02, 0.5, 0.5
 CONVERSION_KEYS = ("conversion", "bridged", "n_legs", "n_assets")
@@ -47,8 +52,9 @@ AMOUNT_KEYS = ("usd", "value", "spread")
 
 
 def column_sets(columns):
-    starter = [c for c in columns if not c.startswith(("shape_", "long_", "once_"))]
-    typology = [c for c in columns if c.startswith("shape_") and not c.startswith(("shape_b_", "shape_g"))]
+    starter = [c for c in columns if not c.startswith(("shape_", "long_", "once_", "sig_"))]
+    typology = [c for c in columns if (c.startswith("shape_") and not c.startswith(("shape_b_", "shape_g")))
+                or c.startswith("sig_")]
     return list(columns), starter + typology
 
 
@@ -60,9 +66,10 @@ def week_rank(frame: pd.DataFrame, columns) -> pd.DataFrame:
     return out
 
 
-def prepare(drop_conversion=False, rank_amounts=False, long_groups=False, once_groups=False):
+def prepare(drop_conversion=False, rank_amounts=False, long_groups=False, once_groups=False, signals=False):
     """Train and test clue tables for the chosen options, plus labels."""
-    modules = MODULES + ([LONG_MODULE] if long_groups else []) + ([ONCE_MODULE] if once_groups else [])
+    modules = (MODULES + ([LONG_MODULE] if long_groups else []) + ([ONCE_MODULE] if once_groups else [])
+               + ([SIGNALS_MODULE] if signals else []))
     train = build_features("train", modules)
     test = build_features("test", modules)
     lab = train[["TRANSACTION_HASH"]].merge(common.labels(), on="TRANSACTION_HASH")
@@ -88,10 +95,11 @@ def main():
     parser.add_argument("--long-groups", action="store_true")
     parser.add_argument("--self-train", action="store_true")
     parser.add_argument("--once-groups", action="store_true")
+    parser.add_argument("--signals", action="store_true")
     parser.add_argument("--out", default="predictions_shapes_v2.csv", help="file name inside outputs/")
     args = parser.parse_args()
 
-    train, test, lab, X, Xt = prepare(args.drop_conversion, args.week_rank, args.long_groups, args.once_groups)
+    train, test, lab, X, Xt = prepare(args.drop_conversion, args.week_rank, args.long_groups, args.once_groups, args.signals)
     y = lab.is_suspicious.to_numpy()
     weight = np.where((lab.difficulty == "medium").to_numpy(), args.medium_weight, 1.0)
     everything, typology = column_sets(X.columns)
@@ -126,7 +134,7 @@ def main():
     OUTPUTS.mkdir(exist_ok=True)
     path = OUTPUTS / args.out
     out.to_csv(path, index=False)
-    flags = [f for f in ("drop_conversion", "week_rank", "long_groups", "self_train", "once_groups") if getattr(args, f)]
+    flags = [f for f in ("drop_conversion", "week_rank", "long_groups", "self_train", "once_groups", "signals") if getattr(args, f)]
     print(f"wrote {len(out):,} test scores to {path} (windows {args.windows}, "
           f"medium weight {args.medium_weight}, options {flags or 'none'}; {X.shape[1]} clues)")
 

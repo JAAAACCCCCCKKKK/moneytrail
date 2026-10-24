@@ -480,6 +480,46 @@ fall on both sides inflates the score.
   of the top 401 shared). Every part of it reruns to an identical file.
 - **Leaderboard:** attempt 12, **66.4** (+0.8 on 65.6; honest test predicted +2.2).
 
+### ~13:00 — The deck's shape table, signal by signal: gaps closed (Jack)
+- **Audit:** every "signal to compute" in the deck's eight-shape table checked against both
+  pipelines. Not computed anywhere: middle wallets with no other activity or used once, a
+  bipartite block's contacts outside itself, value into against out of a group, assets changing
+  along a loop. Partly: new or quiet fan-in senders, recipients' forwarding across a fan-out,
+  loop duration, routes longer than 2 hops, source-out against destination-in value, similar
+  hold times. Violet's v2 (65.1) also lacks Jack's two-hop paths, bipartite density,
+  sender-receiver overlap, layered depth and hub exclusion, and its return check searches
+  forward only, so it fires only on the payment that starts a loop.
+- **Change:** `features_shape_signals.py`, 51 `sig_*` clues covering every gap above (hubs set
+  aside; groups at 5 and 10 minutes and once-a-week groups at 1 hour). Option `--signals` in
+  `src/predict_shapes_v2.py`; run 3 and candidate B still reproduce byte for byte without it.
+  The loop-asset clue is computed but removed by `--drop-conversion`, as the README says asset
+  choices ignore the labels. Wallet age: every account's `Sequence` starts at 1 each week and
+  rises by one per payment (alone: AP 0.030 against 0.031 chance), so it is a payment counter,
+  not an age; "new" means first seen this week within the last 6 hours.
+- **Does each signal find its typology?** (`python -m experiments.shape_signals_check`; average
+  precision at picking out the family's suspicious payments, chance 0.002-0.004; previous best
+  in brackets): cycle, loop hops **0.61** and loop duration 0.48 (0.28); scatter-gather, quiet
+  middle wallets 0.25, value out against in 0.23 (0.20); multi-stage, distinct routes 0.19
+  (0.11); layered stack, routes 0.07 (0.01); bipartite, share of traffic inside the block 0.024.
+  Several also separate laundering from same-shape honest schemes: loop duration 0.79 (base rate
+  0.41), routes in stacks 0.78 and middle wallets used once 0.75 (0.53), quiet middles 0.72
+  (0.54). No signal: quiet or new fan-in senders, exit against sum in, last deposit to exit,
+  recipients' forwarding speed, group closure (all at chance).
+- **Honest test** (`main.py` folds, group smoothing, 0.75/0.25 blend; against candidate B):
+  +1.1, +0.1, +1.1 on seeds 42, 7, 2026; better in 11 of 15 folds. Medium in the top 5%:
+  0.24 → 0.26, 0.19 → 0.24, 0.17 → 0.23. Easy in the top 5%: 0.97 → 0.95.
+- **Test predictions:** `python -m src.predict_shapes_v2 --drop-conversion --week-rank --signals
+  --out predictions_shift_b_signals.csv`; passes the checker; top-401 overlap with run 3 319,
+  with B 324.
+- **Not taken further:** a script feeding these clues into Violet's two-stage model
+  (`src/combined.py`) was stopped before it produced a result and removed. It overlapped Alim's
+  `src/predict_union.py`, now the main pipeline, and it read Violet's code from before her
+  reproducibility fix (12:40). No cached features from it were kept.
+- **Next:** test these signals in the combined model, where new clues now go. `src.predict_union`
+  builds Jack's clues through `prepare()`, so `prepare(signals=True)` adds them.
+- **Leaderboard:** not uploaded, and this file should not be uploaded as is: its base, candidate B,
+  scored 61.8 (attempt 10), below run 3's 62.0.
+
 ## External data
 
 Every dataset we use that didn't come from the organisers. Required by the organisers' rules
