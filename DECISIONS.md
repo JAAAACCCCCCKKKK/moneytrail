@@ -881,6 +881,28 @@ fall on both sides inflates the score.
   capacity; hard relays count in the score wherever they rank above innocent payments. 67.8 stays the
   final entry.
 
+### ~15:40 — Hard relays: a second observable signal, steady pass-through (Alim, with Claude Code)
+- **Change:** experiment only (scratchpad scripts). Tested the deck's "whole flow" ideas on the true
+  relay schemes (labels used only to group and measure): new outside wallets each burst, pass-through
+  per burst, delays, end-to-end value, whether sinks pay on and sources were funded, links to easy or
+  medium schemes.
+- **Finding:** the guilty relay passes on a **steadier share of money in each of its three bursts**
+  (money to the sinks ÷ money from the sources, per burst; spread across bursts). Its percentile
+  among the forward siblings, per cohort: 0.43, 0.03, 0.01, 0.01, 0.11, 0.07, 0.11, 0.21, 0.23, 0.01,
+  0.05, 0.29 (mean 0.13; in the steadiest 11% in 8 of 12). Nothing else stood out (means 0.35-0.64).
+- **Ceiling** (true scheme grouping, forward × steadiness rank, as a multiplier on the out-of-fold
+  gate): relay AP 0.25 against chance 0.010; gate 63.76 → 64.6 / 65.3 / **66.4** for strengths 2 / 4 / 8.
+- **Label-free version:** on pairs repeating 2-4 times over more than a day, the share passed on in
+  the 3 or 6 hours after each occurrence, its spread across occurrences, and forward evidence, ranked
+  and passed to the wallets on the pair. Relay AP 0.012-0.041, AUC 0.45-0.54; gate 63.76 → 63.82 at
+  best (2 of 5 folds); the wallet version lowers it (61.1-63.6).
+- **Leaderboard:** not uploaded.
+- **Decision:** dropped for today. The hard relays are observable (forward flow plus steady
+  pass-through), but only once each scheme is grouped as a whole, and the middle wallets' ~110 other
+  payments swamp any window-based grouping. **Next step with more time:** learn the grouping itself,
+  a link model trained on the training week's `scenario_id` ("are these two payments in the same
+  scheme?", a training target only), then cluster test payments with it and score whole clusters.
+
 ## External data
 
 Every dataset we use that didn't come from the organisers. Required by the organisers' rules
@@ -905,7 +927,7 @@ learning only and are not used by any of our code; see `prep/RESEARCH.md`.
   in the 13:45 entry), `tools/track_outputs.py`, `tools/check_zip_limits.py`, the release workflow
   `.github/workflows/release.yml`, and the gate options in `src/blend.py` and `src/predict_union.py`;
   run the 13:40 analysis of lost points and hard relays; merge Jack's branch and find and fix the
-  hash-seed bug in `features_shape_signals.py` (14:10); run the 15:20 hard-relay direction
+  hash-seed bug in `features_shape_signals.py` (14:10); run the 15:20 and 15:40 hard-relay
   experiment (including rebuilding the gate's out-of-fold scores); and draft this log. Settings: default Claude
   Code configuration, no custom temperature or sampling parameters. Prompts: the conversation
   was interactive; the reusable prompts are the three skill files in `.claude/skills/`, which
