@@ -849,6 +849,38 @@ fall on both sides inflates the score.
 - **Decision:** dropped. Seed noise isn't what limits the gate; a second model kind doesn't add
   information on the same clues. 67.8 stays the final entry.
 
+### ~15:20 — Hard relays: direction of money flow as a clue (Alim, with Claude Code)
+- **Change:** experiment only (scripts in Claude Code's scratchpad, not in the repo). Prompted by the
+  leaderboard panel (observable hard 0% in the top 1%).
+- **What a hard relay looks like:** three bursts on days 0, 3 and 6 through the same one or two middle
+  wallets, with new outside wallets each burst. Middle wallets are not exclusive to the scheme: about
+  110 other payments each in the week, from the shared pool.
+- **Checked first, nothing separates the guilty relay from its forward-running siblings** (guilty
+  scheme's percentile among the ~50 forward siblings in each of the 12 cohorts, 0.5 = no difference):
+  the raw XRPL fields the cached table drops (account `SEQUENCE` and its steps, `LAST_LEDGER_SEQUENCE`
+  offset, fee and its spread, position in the ledger, SendMax, Paths, extra JSON keys), amounts, wallet
+  count, conversions, hour, decimals: means 0.35-0.59. Closest: the scheme wallets' outside activity,
+  mean 0.32-0.34 (fewer outside contacts), too weak to use. The forward/backward split from 13:40
+  holds exactly: all 12 guilty relays forward, innocent siblings 49% forward.
+- **Label-free direction clues:** for each payment u→v, was u funded just before by a larger amount
+  (within 6 h, ratio 0.5-1) or topped up just after; did v pay on just after or just before; averaged
+  over every occurrence of the same pair, and over wallets on pairs repeating 2-4 times in the week (a
+  relay marker: 63% of relay payments, 17% of the rest). Forward vs backward relays AUC 0.60-0.64 per
+  payment and pair; linking repeating pairs through shared wallets 0.70 at pair level, but the linked
+  groups merge into one group of 16,000 payments. Guilty vs innocent relay at best AUC 0.62.
+- **Honest test** (out-of-fold gate scores rebuilt on the same folds, reproducing 63.76 exactly):
+  down-weighting payments with backward evidence on relay-like pairs **63.76 → 63.83** (fold mean
+  64.36 → 64.42, better in 5 of 5); boosting forward ones as well lowers it (63.5-63.7); a second-stage
+  model on gate + direction clues 56.8. **Ceiling** with the true forward/backward label of every relay
+  scheme: 65.20 (+1.4).
+- **Leaderboard:** not uploaded.
+- **Decision:** dropped. The gain is far below our 1.5-point rule, and even perfect direction knowledge
+  only reaches +1.4, because it narrows each cohort from 1 in 100 to 1 in 50. The guilty relay looks
+  designed to match its forward siblings on everything observable here. Note for the write-up: the top
+  1% holds only 402 payments, already 96% suspicious and mostly easy, so 0% hard there is mainly
+  capacity; hard relays count in the score wherever they rank above innocent payments. 67.8 stays the
+  final entry.
+
 ## External data
 
 Every dataset we use that didn't come from the organisers. Required by the organisers' rules
@@ -873,7 +905,8 @@ learning only and are not used by any of our code; see `prep/RESEARCH.md`.
   in the 13:45 entry), `tools/track_outputs.py`, `tools/check_zip_limits.py`, the release workflow
   `.github/workflows/release.yml`, and the gate options in `src/blend.py` and `src/predict_union.py`;
   run the 13:40 analysis of lost points and hard relays; merge Jack's branch and find and fix the
-  hash-seed bug in `features_shape_signals.py` (14:10); and draft this log. Settings: default Claude
+  hash-seed bug in `features_shape_signals.py` (14:10); run the 15:20 hard-relay direction
+  experiment (including rebuilding the gate's out-of-fold scores); and draft this log. Settings: default Claude
   Code configuration, no custom temperature or sampling parameters. Prompts: the conversation
   was interactive; the reusable prompts are the three skill files in `.claude/skills/`, which
   are kept in this repo.
