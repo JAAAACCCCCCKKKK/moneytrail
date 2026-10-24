@@ -14,9 +14,15 @@ fall on both sides inflates the score.
   `main.py` is kept only for comparison.
 - **New clues go into the `src/` pipeline.** After changing features, delete `data/cache/`
   or the old cached features are reused.
+- **Run 3 candidate:** Jack's `python3 -m src.predict_shapes_v2` (typology detectors, group
+  smoothing, rank blend), honest test 57.6 ± 6.1 on `main.py`'s folds. Not uploaded yet.
 - **Priority:** easy and medium cases first (about 84 of the 100 points live there; half the
-  easy cases are still outside our top 1%). Hard relays from 14:30 with group-level and
-  guilt-by-association clues.
+  easy cases are still outside our top 1%). Hard relays from 14:30. Whole-week guilt by
+  association was tried and dropped (11:45); the next hard-case idea is how a payment relates
+  to its wallet's own earlier history.
+- **Rules update (11:50): external datasets are allowed,** as long as we disclose each one: why
+  we used it and whether it helped. Log every external dataset in the "External data" section
+  below, including ones that didn't work.
 - **Who's on what:** Jack, motif and shape clues; Natasha, longer-history wallet clues and
   studying the cases we still miss; Violet, XRPL asset and conversion clues, data checks,
   then the method write-up from 15:00; Alim, honest test, merging, uploads, this log.
@@ -192,6 +198,29 @@ fall on both sides inflates the score.
 - **Honest test:** round 1 reproduces run 2 exactly (54.9, folds 57.3 ± 9.9). Round 2: **54.6**, folds 56.7 ± 10.6, better in only 2 of 5 folds. Medium in the top 1% 0.05 → 0.07 (noise-sized); hard still 0.00.
 - **Leaderboard:** not uploaded.
 - **Decision:** dropped (fails our rule: more than a point and at least 4 of 5 folds). Likely reason: the hard-relay wallets are busy innocent-looking wallets (about 60 payments a week), so whole-week neighbour averages are dominated by innocent traffic. Code kept in `src/stage2.py` for the record.
+
+### ~11:50 — Rules update: external datasets allowed with disclosure (Alim)
+- **Change:** no model change. The organisers confirmed on the day that external datasets may be
+  used, provided we disclose each one: why we used it and whether it worked. This replaces
+  the "organiser data only" rule from the training slides and the terms.
+- **Still to respect:** the README still forbids external labels for this data, organiser
+  files, generator seeds and test answers. Any dataset must be lawful to use, and raw datasets
+  stay out of the repo and the code ZIP (we link to the source instead).
+- **Decision:** every external dataset gets a row in the "External data" section below, kept
+  up to date whether or not it helped, so the method write-up can report it honestly.
+
+## External data
+
+Every dataset we use that didn't come from the organisers. Required by the organisers' rules
+update at 11:50: say why we used it and whether it worked.
+
+| Dataset | Source | Why we used it | How we used it | Did it help? (honest test before → after) | Kept? |
+|---|---|---|---|---|---|
+| None yet | | | | | |
+
+Not counted as external data used in our entry: the public datasets we practised on before
+the event (IBM AML transactions on Kaggle, a slice of the AWS public XRPL data). They were for
+learning only and are not used by any of our code; see `prep/RESEARCH.md`.
 
 ## AI use
 
