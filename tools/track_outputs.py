@@ -6,6 +6,11 @@ checker, and where it came from. Rows are keyed by the file's SHA-256, so a rege
 file gets a new row and the old one stays as history. The Notes column is
 hand-written and is preserved across updates.
 
+The SHA-256 ignores line endings (CRLF is read as LF). With core.autocrlf, git stores
+these CSVs with LF but checks them out with CRLF on Windows, so a raw hash of the same
+file differed between team laptops. Rows keyed by an older raw hash are re-keyed
+automatically the first time the tool sees the file.
+
 Run from the repo root after writing any file into outputs/:
   python tools/track_outputs.py
   python tools/track_outputs.py --note predictions_shapes_v2.csv "Run 3 candidate ..."
@@ -34,19 +39,22 @@ HEADER = """# Outputs ledger
 
 Every predictions file we have produced, whether or not it was uploaded. The CSVs are
 committed in `outputs/` but left out of the release code ZIP (see `.gitattributes`). Update it with
-`python tools/track_outputs.py` after writing a file. Rows are keyed by SHA-256, so a
+`python tools/track_outputs.py` after writing a file. Rows are keyed by SHA-256 with line
+endings ignored, so the same file has the same key on Windows and macOS, and a
 regenerated file gets a new row. "Check" is the `submission-check` result against all
 40,101 test transactions. Leaderboard scores and the commit behind each upload live in
 `SUBMISSIONS.md`.
 """
 
 
+def raw_sha256(path: Path) -> str:
+    """Hash of the exact bytes on disk (only used to re-key old rows)."""
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
 def sha256(path: Path) -> str:
-    h = hashlib.sha256()
-    with path.open("rb") as f:
-        for block in iter(lambda: f.read(1 << 20), b""):
-            h.update(block)
-    return h.hexdigest()
+    """Hash with CRLF read as LF, so it is the same on every OS and matches git's copy."""
+    return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
 
 
 def check(path: Path) -> str:
@@ -95,6 +103,17 @@ def main() -> None:
 
     for path in sorted(OUTPUTS.glob("*.csv")):
         digest = sha256(path)[:12]
+        raw = raw_sha256(path)[:12]
+        if raw != digest and raw in rows:      # a row keyed by the old, line-ending-dependent hash
+            old = rows.pop(raw)
+            if digest in rows:                 # same file already listed: keep any note it had
+                if not rows[digest]["Notes"] and old["Notes"]:
+                    rows[digest]["Notes"] = old["Notes"]
+                print(f"merged  {path.name}  {raw} -> {digest} (same file, different line endings)")
+            else:
+                old["SHA-256"] = digest
+                rows[digest] = old
+                print(f"re-key  {path.name}  {raw} -> {digest}")
         row = rows.get(digest)
         if row is None:
             scores = pd.read_csv(path, usecols=["score"]).score

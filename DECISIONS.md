@@ -270,6 +270,52 @@ fall on both sides inflates the score.
 - **Leaderboard:** not uploaded.
 - **Decision:** kept as a candidate. On its own it's at the edge of our 1.5-point noise threshold, so combine it with the other small consistent gains (long motif windows +1.7, Violet's dropped conversion clues +0.7) and upload the combination only if it clears 1.5 points on every check.
 
+### ~12:05 — Robustness to the train-to-test shift: candidates A, B and D (Jack)
+- **Why this direction:** run 4 gained 1.2 in the honest test and lost 1.2 on the leaderboard.
+  Our honest test only sees the training week, so it can't see what changes in the test week,
+  which the README warns about ("batch variations absent from training").
+- **What drifts** (each clue alone, training week against test week; 0.5 = no difference): the
+  spread of amounts into and out of a wallet (`shape_intake_spread_*`, `shape_payout_spread_*`,
+  up to 0.58; mean 0.58 in train, 0.69 in test), conversion share (0.57; 41% to 51%), and amount
+  levels (log USD 4.13 to 4.00, about 12% lower in test). A model asked to tell the two weeks
+  apart scores 0.997, but that mostly reflects wallet-constant week clues acting as
+  fingerprints, not a real shift.
+- **Candidates** (all options of `src/predict_shapes_v2.py`; the defaults still reproduce run 3
+  byte for byte):
+  - **A** `--drop-conversion`: drop the 13 conversion and asset clues, as Violet did for the
+    `src.train` model. Honest test vs run 3 on seeds 42, 7, 2026: +0.3, -0.0, -0.2.
+  - **B** `--drop-conversion --week-rank`: A, plus every amount-based clue replaced by its
+    percentile within its own week. +0.4, +0.7, -0.1; better in 10 of 15 folds.
+  - **C** B plus Alim's 30-minute, 1-hour and 2-hour motif clues (`features_motifs_long.py`,
+    `--long-groups`): +0.3, -0.6, +0.4. The typology detectors already cover what they added to
+    the simpler `src.train` model. Not taken forward.
+  - **D** `--drop-conversion --week-rank --self-train`: B, plus one round of self-training on the
+    test week: our own top 2% of test scores as suspicious, the bottom 50% as innocent, at half
+    weight; retrain and score again. Uses only our predictions, never test answers. Simulated
+    on the training week with each held-out fold playing an unseen week: +0.7 and +1.3 on two
+    fold seeds, 7 of 10 folds better (top 1% instead of 2%: +0.2 and -0.2).
+- **Test predictions** (all pass the checker; tracked in `OUTPUTS.md`): `predictions_shift_a.csv`,
+  `predictions_shift_b.csv`, `predictions_shift_d.csv`. Top-401 overlap with run 3: A 367, B 368,
+  D 291.
+- **Leaderboard:** not uploaded.
+- **Decision:** the honest test cannot judge a shift fix, so the leaderboard decides. Suggested
+  upload order: B (lowest risk), then D.
+
+### ~12:15 — Slow schemes held together by once-a-week pairs (Jack)
+- **Change:** `features_motifs_once.py` (option `--once-groups`): wallet groups at 30 and 60
+  minutes, linked only through payments whose sender-receiver pair occurs once in the week.
+  59 group clues plus a once-a-week flag; recurring pairs get blanks. Hubs set aside.
+- **Why:** 95% of medium payments and 97% of easy ones are once-a-week pairs, against 34% of
+  innocent payments (Alim's first-time-pair finding, measured over the whole week). Plain
+  30-minute groups hold medium schemes but chain 57% of all payments into groups of 100+.
+  Once-a-week links at 60 minutes hold every medium scheme (median group of 17) with only 12% of
+  payments in groups of 100+.
+- **Honest test** (`main.py` folds, against candidate B): +0.7, +0.1, +0.2 on seeds 42, 7, 2026;
+  9 of 15 folds better. Medium cases in the top 5%: 0.26, 0.21, 0.16 against 0.24, 0.19, 0.17.
+- **Decision:** not taken forward for now. The groups now contain medium schemes, but their
+  shape and tempo still look like honest look-alikes; the gain is inside the noise. Kept as an
+  option for a later combination.
+
 ## External data
 
 Every dataset we use that didn't come from the organisers. Required by the organisers' rules
