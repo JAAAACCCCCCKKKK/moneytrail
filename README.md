@@ -7,7 +7,7 @@ Every test transaction gets a suspicion score; payments are flagged for review, 
 The data is synthetic, so these results say nothing about real accounts or the real XRP Ledger.
 
 **Team:** Alim Badmus (captain), Natasha, Jack, Violet.
-**Best leaderboard score:** 67.1 (commit `ed19b17`, `outputs/predictions_blend_two_q_violet.csv`).
+**Final entry:** `outputs/predictions_blend_generator_G_violet.csv` (leaderboard 67; commit `5b83e62`). Best single run 67.1 (`ed19b17`), from a draw the fixed code reproduces only approximately.
 What we tried and why, with every honest-test and leaderboard score: `DECISIONS.md` and `SUBMISSIONS.md`.
 
 ## Quickstart
@@ -23,11 +23,12 @@ What we tried and why, with every honest-test and leaderboard score: `DECISIONS.
 
    ```bash
    python detector/predict.py --train data/train --test data/test-data --out outputs/predictions_violet_v2_fixed.csv
-   python -m src.predict_two_q
-   python -m src.blend --run3 predictions_two_q.csv --violet predictions_violet_v2_fixed.csv --out predictions_blend_two_q_violet.csv
+   python -m src.predict_generator --mode G --out predictions_generator_G.csv
+   python -m src.blend --run3 predictions_generator_G.csv --violet predictions_violet_v2_fixed.csv --out predictions_blend_generator_G_violet.csv
    ```
 
-   The last file, `outputs/predictions_blend_two_q_violet.csv`, is the predictions CSV we upload.
+   The last file, `outputs/predictions_blend_generator_G_violet.csv`, is our final predictions CSV.
+   (`python -m src.predict_two_q` + the same blend gives the 67.1-recipe file, `predictions_blend_two_q_violet.csv`.)
    On a Windows laptop the three steps take about 20-30 minutes in total from a fresh clone (most of it building the clue tables; measured 26 minutes with other jobs running); clue
    tables are cached in `data/cache/` (delete it after changing any clue code).
 
@@ -39,10 +40,11 @@ What we tried and why, with every honest-test and leaderboard score: `DECISIONS.
 
 1. `detector/` (Violet): about 225 wallet, window, gap-cluster and motif clues per payment, scikit-learn
    gradient boosting, then a second stage with the scores of nearby payments.
-2. `src/predict_two_q.py` (Jack, built on Alim's `src/predict_union_signals.py`): one LightGBM on Jack's
-   shape and typology clues plus Violet's clues, smoothed over wallet groups; blended 50/50 by rank
-   with two LightGBMs that answer "is this payment part of a planted scheme?" and "is that scheme
-   suspicious?", the second also seeing slow-scheme groups built from once-a-week payment pairs.
+2. `src/predict_generator.py` (Jack, built on `src/predict_two_q.py` and Alim's `src/predict_union_signals.py`):
+   one LightGBM on Jack's shape and typology clues plus Violet's clues, smoothed over wallet groups;
+   blended 50/50 by rank with the product of a scheme model ("is this payment part of a planted scheme?")
+   and a template model fitted on the true training schemes' whole-scheme parameters, applied to groups
+   rebuilt under the generator's grammar from a learned payment linker (`src/predict_linker.py`).
 3. `src/blend.py`: a 50/50 rank average of steps 1 and 2.
 
 **Honest test:** 5-fold cross-validation on the training week, grouped by planted scenario so a scheme

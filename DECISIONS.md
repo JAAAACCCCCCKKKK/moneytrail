@@ -9,10 +9,15 @@ fall on both sides inflates the score.
 
 ## Where we are now (update this after every upload)
 
+- **Final entry: the generator model, mode G** (`outputs/predictions_blend_generator_G_violet.csv`,
+  commit `5b83e62`): `python -m src.predict_generator --mode G --out predictions_generator_G.csv`, then
+  `python -m src.blend --run3 predictions_generator_G.csv --violet predictions_violet_v2_fixed.csv --out
+  predictions_blend_generator_G_violet.csv`. Leaderboard 67, level with every other candidate (the 67.1
+  recipe's reproducible rebuild, self-training, GNN 25% all score about 67); chosen because it has the
+  best honest test (63.1 / 63.9) and reruns byte for byte. The leader stands at 75.
 - **Best leaderboard score: 67.1** (12:52 UTC, commit `ed19b17`): the two-question model with
-  slow-scheme groups (`python -m src.predict_two_q`) blended 50/50 with Violet's fixed model
-  (`python -m src.blend --run3 predictions_two_q.csv --violet predictions_violet_v2_fixed.csv --out
-  predictions_blend_two_q_violet.csv`). Top 1%: precision 93%, recall 30%. Reruns byte for byte.
+  slow-scheme groups (`python -m src.predict_two_q`) blended 50/50 with Violet's fixed model. That exact
+  file came from a non-reproducible draw (set-order bug, fixed 14:40); its rebuild scores about 67.
 - Earlier: 66.7 (12:21 UTC, `moneytrail-run17`, code `a336f9d`): the combined model with Jack's deck
   signals (`python -m src.predict_union_signals`) blended 50/50 with Violet's fixed model.
 - Earlier: 66.4 (attempt 12, commit `3a2cb43`): 50/50 blend of the combined model
@@ -755,6 +760,32 @@ fall on both sides inflates the score.
   grouping decides, not in more clues.
 - **Decision:** the generator model is reproducible (byte-identical under another hash seed) and
   scores level with our best, so it is a valid final entry; see "Where we are now" for the choice.
+
+### ~15:55 — Hard relays, last probe: scheme payments look like the wallet's other payments (Jack, with Claude Code)
+- **Analysis:** for all 12 laundering relay wallets (165 scheme payments among 1,356 of theirs that week)
+  and 120 honest ones, every per-payment property tested (counterparty's weekly activity and activity
+  within +-1 hour, amount against the wallet's usual, hour of day, direction, pair recurrence, legs,
+  whether the counterparty deals with the wallet's other counterparties) separates scheme payments from
+  the wallet's other payments only weakly (AUC 0.39-0.63), and identically for laundering and honest
+  wallets. Per-episode amount matching fails too: a laundering relay's episodes pass on 0.59, 1.24 and
+  0.60 of what came in; only the whole-week cumulative balance is constrained.
+- **Conclusion:** the running-balance signal (15:05) can only be used by searching over subsets of the
+  wallet's ~110 payments for a three-episode, never-negative, nearly-whole flow, which is combinatorial
+  and finds many chance fits on busy wallets. Not solvable with per-payment membership. Logged as the
+  honest limit of our hard-case work.
+
+### ~15:55 — Data augmentation: scheme copies with new wallets and times (Jack, with Claude Code)
+- **Change:** `tools/augment.py` and `src/predict_aug.py`. Every planted shape scheme copied with other
+  non-hub wallets (one consistent map per copy) and a whole-scheme time shift inside the week, hashes
+  renewed, `SEQUENCE` recomputed as the generator does. Label-preserving because wallets carry no signal
+  and the label depends on the scheme's internal timing and shape only.
+- **Version 1 (copies inside the training week):** honest test on the original rows, copies kept with
+  their originals: 58.2 / 58.9 → 59.5 / 59.9, 11 of 15. But the copies change the originals' context
+  (busier wallets, extra groups): the same recipe scores 62.3 on the clean week, so the gain is measured
+  in a polluted setting and may not transfer to the clean test week. File
+  `outputs/predictions_blend_aug_violet.csv`, a probe only.
+- **Version 2 (copies in a separate second week, originals untouched; `--replace`, weeks train + aug2):**
+  running.
 
 ## External data
 

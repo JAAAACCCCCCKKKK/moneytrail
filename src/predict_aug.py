@@ -59,15 +59,19 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--cv", action="store_true")
     parser.add_argument("--out", default="predictions_aug.csv")
+    parser.add_argument("--weeks", nargs="+", default=["aug"],
+                        help="training weeks to stack, e.g. train aug2 (aug2 = copies in a separate week, originals untouched)")
     args = parser.parse_args()
     t0 = time.time()
-    ids, U2 = week_tables("aug")
+    parts = [week_tables(w) for w in args.weeks]
+    ids = pd.concat([i.assign(week=w) for (i, _), w in zip(parts, args.weeks)], ignore_index=True)
+    U2 = pd.concat([u for _, u in parts], ignore_index=True)[parts[0][1].columns]
     U = U2.drop(columns=[c for c in U2.columns if c.startswith("once_")])
-    lab = labels_for("aug", ids.TRANSACTION_HASH)
+    lab = pd.concat([labels_for(w, i.TRANSACTION_HASH) for (i, _), w in zip(parts, args.weeks)], ignore_index=True)
     y = lab.is_suspicious.to_numpy().astype(int)
     scheme = (~lab.family.isin(NOT_SCHEME)).to_numpy().astype(int)
-    pay = ids.merge(common.payments("aug"), on="TRANSACTION_HASH")
-    original = ~lab.scenario_id.astype(str).str.startswith("aug:").to_numpy()
+    pay = pd.concat([i[["TRANSACTION_HASH"]].merge(common.payments(w), on="TRANSACTION_HASH") for (i, _), w in zip(parts, args.weeks)], ignore_index=True)
+    original = (ids.week == args.weeks[0]).to_numpy() & ~lab.scenario_id.astype(str).str.startswith("aug:").to_numpy()
     print(f"augmented week: {len(y):,} rows ({original.sum():,} original), {U2.shape[1]} clues ({time.time() - t0:.0f}s)", flush=True)
 
     if args.cv:

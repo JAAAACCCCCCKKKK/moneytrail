@@ -36,8 +36,12 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--copies", type=int, default=2)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--replace", action="store_true",
+                        help="write a second week: background and relays plus the copies, WITHOUT the original schemes, "
+                             "so the original week stays clean (data/aug2/)")
     args = parser.parse_args()
     rng = np.random.default_rng(args.seed)
+    out_dir = ROOT / "data" / ("aug2" if args.replace else "aug")
 
     tx = pd.read_parquet(TRAIN / "transactions.parquet")
     tr = pd.read_parquet(TRAIN / "transfers.parquet")
@@ -89,6 +93,9 @@ def main():
             l["scenario_id"] = f"aug:{k}:{sid}"
             new_tx.append(t); new_tr.append(legs); new_lab.append(l)
 
+    if args.replace:
+        keep = ~tx.TRANSACTION_HASH.isin(scheme.TRANSACTION_HASH)
+        tx, tr, lab = tx[keep], tr[~tr.TRANSACTION_HASH.isin(scheme.TRANSACTION_HASH)], lab[~lab.TRANSACTION_HASH.isin(scheme.TRANSACTION_HASH)]
     tx_all = pd.concat([tx] + new_tx, ignore_index=True)
     tr_all = pd.concat([tr] + new_tr, ignore_index=True)
     lab_all = pd.concat([lab] + new_lab, ignore_index=True)
@@ -97,13 +104,13 @@ def main():
     tx_all["SEQUENCE"] = tx_all.assign(_t=order).groupby("ACCOUNT")._t.rank(method="first").astype(int).map(Decimal)
     tx_all = tx_all.sort_values(["TIMESTAMP", "TRANSACTION_HASH"], key=lambda s: s.astype(str) if s.name == "TRANSACTION_HASH" else s.astype("int64")).reset_index(drop=True)
 
-    AUG.mkdir(parents=True, exist_ok=True)
-    tx_all.to_parquet(AUG / "transactions.parquet", index=False)
-    tr_all.to_parquet(AUG / "transfers.parquet", index=False)
-    lab_all.to_csv(AUG / "labels.csv", index=False)
-    (AUG / "market_rates.csv").write_bytes((TRAIN / "market_rates.csv").read_bytes())
+    out_dir.mkdir(parents=True, exist_ok=True)
+    tx_all.to_parquet(out_dir / "transactions.parquet", index=False)
+    tr_all.to_parquet(out_dir / "transfers.parquet", index=False)
+    lab_all.to_csv(out_dir / "labels.csv", index=False)
+    (out_dir / "market_rates.csv").write_bytes((TRAIN / "market_rates.csv").read_bytes())
     print(f"augmented week: {len(tx):,} + {len(tx_all) - len(tx):,} copied payments from {scheme.scenario_id.nunique()} schemes x {args.copies}; "
-          f"{len(lab_all[lab_all.is_suspicious == 1]):,} suspicious rows; wrote {AUG}")
+          f"{len(lab_all[lab_all.is_suspicious == 1]):,} suspicious rows; wrote {out_dir}")
 
 
 if __name__ == "__main__":
