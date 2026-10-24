@@ -520,6 +520,29 @@ fall on both sides inflates the score.
 - **Leaderboard:** not uploaded, and this file should not be uploaded as is: its base, candidate B,
   scored 61.8 (attempt 10), below run 3's 62.0.
 
+### ~13:15 — Structure model: "is this part of a planted scheme, guilty or not?" (Alim, Jack's idea)
+- **Change:** `python3 -m src.predict_union --target structure`: a second LightGBM on the combined
+  model's 412 clues, trained to answer "is this payment part of a planted shape scheme
+  (laundering or innocent look-alike)?" (`family` in the nine shape families). The label is used
+  only as a training target, never as a clue. Its score is mixed into the blend with a hand-set
+  weight: `python3 -m src.blend ... --structure predictions_structure.csv --structure-weight 0.4`.
+- **Why:** medium schemes can't be told from their innocent look-alikes, but both are compact
+  (about 7 payments in about 2 hours), unlike relays (week-long, 10-12 wallets) and background.
+  Above the median medium payment sit 1,056 relay look-alikes, 228 background payments and 587
+  shape look-alikes; pushing relays and background below every shape scheme would add about 4.7
+  points for medium and 1.5 for easy. The main model sees only 225 medium examples; the structure
+  model learns compactness from 2,106 (1,025 laundering + 1,081 look-alike).
+- **Honest test** (`main.py` folds, out-of-fold for every model): the structure model finds
+  planted schemes with AP 85.8 (chance 5.2). Mixed into the 50/50 blend (60.6, folds 60.7 ± 5.9):
+  weight 0.1 61.7; 0.2 62.1; 0.3 62.4; **0.4 62.5 (folds 62.7 ± 5.6, better in 5 of 5)**; 0.5
+  62.5; 0.6 62.2; 0.7 61.8. Medium in the top 1,250 16% → 23% at 0.4; easy 95% → 96%.
+  With Violet's share at 30% instead of 50%: 62.9 (folds 63.2 ± 5.3) at 0.4.
+- **Other weights tested** (same folds): smoothing own-score share 0.10 60.7, 0.25 (run 3) 60.6,
+  0.40 60.5, 1.0 (no smoothing) 59.9, so smoothing strength doesn't matter. Violet's share without
+  structure: 30% 61.2, 40% 61.0, 50% 60.6, 60% 60.2, 70% 59.7.
+- **Decision:** next upload: the 50/50 blend plus the structure model at 0.4, so the leaderboard
+  measures the structure gain alone. Then Violet's share 30% as a separate probe.
+
 ## External data
 
 Every dataset we use that didn't come from the organisers. Required by the organisers' rules

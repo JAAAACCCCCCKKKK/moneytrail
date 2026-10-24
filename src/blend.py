@@ -31,6 +31,9 @@ def main():
     parser.add_argument("--run3", default="predictions_shapes_v2.csv", help="file inside outputs/")
     parser.add_argument("--violet", default="predictions_violet_v2.csv", help="file inside outputs/")
     parser.add_argument("--weight", type=float, default=WEIGHT, help="share of Violet's model")
+    parser.add_argument("--structure", default=None,
+                        help="optional third file inside outputs/: the structure model (src.predict_union --target structure)")
+    parser.add_argument("--structure-weight", type=float, default=0.4, help="share of the structure model")
     parser.add_argument("--out", default="predictions_blend_run3_violet.csv", help="file name inside outputs/")
     args = parser.parse_args()
 
@@ -40,10 +43,14 @@ def main():
     if len(d) != len(a) or len(d) != len(b):
         raise ValueError(f"files cover different transactions ({len(a)}, {len(b)}, {len(d)} shared)")
     blended = (1 - args.weight) * rank01(d.score_run3) + args.weight * rank01(d.score_violet)
+    if args.structure:
+        st = pd.read_csv(OUTPUTS / args.structure).set_index("TRANSACTION_HASH").score.loc[d.TRANSACTION_HASH]
+        blended = (1 - args.structure_weight) * blended + args.structure_weight * rank01(st.reset_index(drop=True))
     score = blended.rank(method="first") / len(blended)   # keep the order, break ties
     out = pd.DataFrame({"TRANSACTION_HASH": d.TRANSACTION_HASH, "score": score})
     out.to_csv(OUTPUTS / args.out, index=False)
-    print(f"wrote {len(out):,} blended scores to {OUTPUTS / args.out} (Violet weight {args.weight})")
+    extra = f", structure weight {args.structure_weight}" if args.structure else ""
+    print(f"wrote {len(out):,} blended scores to {OUTPUTS / args.out} (Violet weight {args.weight}{extra})")
 
 
 if __name__ == "__main__":
