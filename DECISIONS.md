@@ -969,6 +969,24 @@ fall on both sides inflates the score.
   are a few tenths in either direction. The relay version is the only one the honest test also
   supports (+0.25, 5 of 5 folds; 30% Violet was −0.7) and it leaves the top 1% unchanged.
   `METHOD.md` and `README.md` updated to this recipe.
+- **Fresh-copy check (15:47):** a clean clone of `f071e47` with only the raw data (no cache), running
+  the five commands in the README, recreates the uploaded 68.0 file byte for byte in 9.5 minutes.
+
+### ~15:55 — Host's tip, "datapoints from other angles": a wallet view (Alim, with Claude Code)
+- **Why:** the host suggested building training rows from the data in other ways. Angles already in
+  the final model: several time windows (groups at 2, 5 and 10 minutes, activity windows from 5
+  minutes to 24 hours), a second question on the same rows (the structure model, the gate's +1.1),
+  whole-scheme grouping (group smoothing, the relay grouping), and two separately built clue sets.
+  Angles tried and dropped earlier: neighbours' scores as clues (54.9 → 54.6) and new rows from the
+  test week by self-training (62.5 → 61.8). The one untried angle: one row per wallet ("does this
+  wallet touch a suspicious payment?"), its score passed back to each payment's sender and receiver.
+- **Finding, before any training:** each week has only 700 wallets; all 700 have payments in all 5
+  folds; 76% touch a suspicious payment (90% a planted scheme), yet on a typical such wallet only
+  3.5% of its payments are suspicious (median; most 26%); no wallet appears in both weeks.
+- **Decision:** dropped before training. A wallet's score can't tell its few suspicious payments
+  from its ordinary ones (it would learn "busy wallet"), nothing learned about a wallet carries to
+  the test week, and with every wallet in every fold it can't be tested honestly. Script deleted;
+  68.0 stays the final entry.
 
 ## External data
 

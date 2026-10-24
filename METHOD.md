@@ -123,6 +123,9 @@ reach only about 67.3: the rest is built to be indistinguishable (next sections)
 ## What didn't work
 
 - **Guilt by association over the whole week** (neighbour scores as clues): 54.9 → 54.6.
+- **One training row per wallet:** each week has only 700 wallets, 76% of them touch a suspicious
+  payment, but only 3.5% of a typical such wallet's payments are suspicious, so a wallet score
+  can't single out the bad payments. Dropped before training.
 - **Stronger weight on medium cases, wider group windows** (run 4): +1.2 honest, −1.2 leaderboard.
 - **Week-percentile amounts, dropping conversion clues, self-training on the test week:** flat on
   the honest test; 61.8 and 66.5 on the leaderboard.
@@ -200,7 +203,8 @@ python3 -m src.blend --gate --weight 0.1 --run3 predictions_union_prob.csv --vio
 
 The result is `outputs/predictions_gate_relay_v10.csv`. Leaving out `python3 -m src.relay_groups`
 and `--relay relay_multiplier.csv` recreates the 67.8 file, `outputs/predictions_gate_v10.csv`. All models are retrained on each run, so there are
-no model files to download; seeds are fixed (LightGBM 42; scikit-learn 0, 1, 2). A fresh clone
-with only the raw data took 10 minutes on an Apple silicon laptop (24 GB of memory; under 4 GB
-used) and recreated the file byte for byte under different Python hash seeds. Our runs used Python
+no model files to download; seeds are fixed (LightGBM 42; scikit-learn 0, 1, 2). A fresh copy of commit `f071e47`
+with only the raw data and no cached clues took 9.5 minutes on an Apple silicon laptop (24 GB of
+memory; under 4 GB used) and recreated the uploaded file byte for byte (15:47); the 67.8 file was
+recreated the same way at 14:00, under different Python hash seeds. Our runs used Python
 3.14.7 with the pinned library versions; the repository README and the build check use Python 3.12.

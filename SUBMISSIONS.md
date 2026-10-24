@@ -35,3 +35,4 @@
 | ~15:36 BST | f071e47 | 63.4 (measured at 13:50) | **68.0** (reported by Alim) | Violet at 20%, no relay (`--weight 0.2`, `outputs/predictions_gate_v20.csv`). Rank correlation 0.997 with the 67.8 file, 393 of the top 401 shared |
 | ~15:36 BST | f071e47 | not measured | **67.3** (reported by Alim) | Violet at 50%, no relay (`--weight 0.5`, `outputs/predictions_gate_v50.csv`). Rank correlation 0.939, 371 of the top 401 shared |
 | ~15:36 BST | f071e47 | not measured | not above 68.0 (reported by Alim) | Relay multiplier + Violet at 20% (`--weight 0.2 ... --relay relay_multiplier.csv`, `outputs/predictions_gate_relay_v20.csv`) |
+| (final, to upload) | 35e03a6+ (code = f071e47) | 63.97 | 68.0 (same file as the 15:25 relay upload) | **Final entry**: `outputs/predictions_gate_relay_v10.csv` re-uploaded with the final ZIP (write-up, README, logs). Fresh-copy check 15:47: recreated byte for byte from raw data |
