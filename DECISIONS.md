@@ -229,6 +229,24 @@ learning only and are not used by any of our code; see `prep/RESEARCH.md`.
 - **Honest test** (`main.py` folds, raw LightGBM, no smoothing): starter + shapes 54.8 ± 4.1 → with wallet clues 54.9 ± 4.6, better in 3 of 5 folds.
 - **Decision:** not added. The pipeline already has the same ideas (`src_seconds_since_funded`, wallet week profiles, first-time pair). Natasha moves to clues the pipeline doesn't have: how a payment relates to its wallet's own earlier history, for the hard relays.
 
+### ~11:50 — XRPL check: conversion clues removed from the shape model (Violet)
+- **Change:** `experiments/xrpl_conversion_check.py` runs the `src.train` honest test with and
+  without the 13 conversion and asset clues (`is_conversion`, `is_bridged`, `conversion_spread`,
+  `n_legs`, and `n_assets`, `conversion_share`, `bridged_share` at 120s, 300s and 600s).
+- **Why:** the README says asset and conversion choices ignore the labels, conversion share is
+  about equal for suspicious and innocent payments (43% vs 45%, median loss vs market 0.37% for
+  both), and conversion share shifts from 41% in train to 51% in test. Clues with no signal
+  that shift between weeks can only hurt on the test week.
+- **Honest test:** with 54.9 (folds 57.3 +/- 9.9) → without **55.6** (folds 57.5 +/- 10.2).
+  Raw 52.5 → 53.4. All six smoothing variants improve. Top-1% recall: medium 0.05 → 0.07,
+  easy 0.41 → 0.39. The gain is inside the fold spread, but the direction is consistent.
+- **Leaderboard:** not uploaded yet.
+- **Decision:** drop the conversion clues from the shape model: no loss, and less exposure to the
+  train-to-test conversion shift. Other XRPL clues checked and found not applicable here: the data
+  has no self-payments, destination tags, memos or partial payments, and no wallet is opened
+  during the week (holdings exist before the window), so "who opened this wallet" can't be
+  computed.
+
 ## AI use
 
 - **Claude Code (Claude Opus 5 and Claude Opus 5.5, Anthropic).** Used to inspect the dataset,
