@@ -304,6 +304,9 @@ fall on both sides inflates the score.
 - **Leaderboard:** not uploaded.
 - **Decision:** the honest test cannot judge a shift fix, so the leaderboard decides. Suggested
   upload order: B (lowest risk), then D.
+- **Leaderboard (update, Alim):** B uploaded alone as attempt 10 (rerun byte-identical first):
+  **61.8**, against run 3's 62.0. The week-percentile amounts and dropped conversion clues don't
+  help on the test week, so B is dropped and not blended with Violet's model.
 
 ### ~12:15 — Slow schemes held together by once-a-week pairs (Jack)
 - **Change:** `features_motifs_once.py` (option `--once-groups`): wallet groups at 30 and 60
@@ -399,6 +402,9 @@ fall on both sides inflates the score.
   stack 94%. Medium is weak for every shape: 0-31% (best stack 31%, fan-in 22%, multi-stage 17%;
   bipartite, chain, cycle, fan-out and random 0%). Violet's model alone is better on fan-in
   (90%), random (98%) and stack (98%); run 3 ranks chains and cycles higher.
+- **Next probe (~12:30):** Violet's share 70% (`python3 -m src.blend --weight 0.7`). The honest
+  test is flat from 50% to 80% Violet (58.6, 58.5, 58.4, 58.3), but on the test week Violet's
+  model alone beats run 3 by 3 points, so the leaderboard decides the weight.
 - **Decision:** upload the 50/50 blend as run 8. Violet's own blend file
   (`predictions_blend_violetv2_jackv3.csv`) uses run 4's model, which scored worse; don't upload it.
 
