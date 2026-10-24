@@ -708,6 +708,26 @@ fall on both sides inflates the score.
 - **Next step with more time:** reconstruct relay schemes (one central wallet, episodes of collect then
   disburse) and score each by its running balance; worth up to about 2-3 points if the grouping holds.
 
+### ~15:15 — Tried it: learned relay-scheme membership, then the balance (Jack, with Claude Code)
+- **Change:** `features_relay_balance.py` (kept in the repo, **not** part of the final pipeline). For every
+  non-hub wallet and each of its payments, a LightGBM predicts "does this payment belong to a relay
+  scheme centred on this wallet?" from direction, same-direction payments within 1 hour, opposite-
+  direction payments 2-8 hours later or earlier, counterparty activity, pair recurrence and amount
+  against the wallet's usual (target from `scenario_id`/`family`, training week only, out-of-fold by
+  wallet; AUC 0.89). The wallet's running balance is then taken over its payments weighted by that
+  membership, and each payment gets its sender's, receiver's and likely-centre's profile.
+- **Result:** the signal fades at each step: scheme level with true grouping AUC 0.80 → with learned
+  membership 0.72 → per payment 0.59. Unsupervised alternatives (keep only the wallet's bursts, gaps
+  of 15-60 min) did no better (0.60-0.66).
+- **Honest test** (three fold seeds): as extra clues in the 67.1 recipe 62.3 / 63.0 → 62.6 / 63.3, 10 of
+  15, but the hard relays' median rank doesn't move (12,663 → 12,464), so the gain isn't from them.
+  Re-ranking only the bottom of the list (below rank 2,500 or 5,000) by the balance signal lifts the
+  hard relays' median rank to 10,500-11,800 but pushes medium and easy cases below rank 2,500 down by
+  the same amount: total 62.2-62.3, no change.
+- **Decision:** not used. The finding stands as the clearest explanation of what makes the hard cases
+  laundering, and as the first thing to build with more time: a better reconstruction of each relay
+  wallet's episodes (the membership model is the bottleneck).
+
 ## External data
 
 Every dataset we use that didn't come from the organisers. Required by the organisers' rules

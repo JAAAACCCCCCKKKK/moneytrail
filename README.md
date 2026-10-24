@@ -28,7 +28,7 @@ What we tried and why, with every honest-test and leaderboard score: `DECISIONS.
    ```
 
    The last file, `outputs/predictions_blend_two_q_violet.csv`, is the predictions CSV we upload.
-   On a Windows laptop the three steps take about 20 minutes in total from a fresh clone (most of it building the clue tables); clue
+   On a Windows laptop the three steps take about 20-30 minutes in total from a fresh clone (most of it building the clue tables; measured 26 minutes with other jobs running); clue
    tables are cached in `data/cache/` (delete it after changing any clue code).
 
 3. The run is deterministic: every random seed is fixed (LightGBM `random_state=42`; Violet's
