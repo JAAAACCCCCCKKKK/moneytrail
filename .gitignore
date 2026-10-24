@@ -16,3 +16,6 @@ data/
 Thumbs.db
 .idea/
 .vscode/
+
+# Our run outputs (predictions, run summaries)
+outputs/
