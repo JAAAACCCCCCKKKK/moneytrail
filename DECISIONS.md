@@ -579,6 +579,30 @@ fall on both sides inflates the score.
 - **Next if time:** better grouping for slow schemes. Once-pair groups at 30 minutes estimate a medium
   scheme's gap at only 0.43-0.55 of its true value and leave 30% of medium payments ungrouped.
 
+### ~14:00 — Cleaner slow-scheme groups: link only scheme-like payments (Jack, with Claude Code)
+- **Change:** experiment only (script not in the repo). Wallet groups at 30 and 60 minutes built only
+  from payments the scheme model scores at 0.2 or 0.4 and above (out-of-fold in the honest test), then
+  each group's median gap turned into the share of training schemes at that speed that are suspicious
+  (worked out inside each fold), times P(scheme), rank-blended 50/50 with the combined model.
+- **Why:** to stop background and relay once-pairs from joining medium schemes' groups.
+- **Grouping:** it works as intended: every grouped medium scheme now shows its true gap (ratio 1.0,
+  was 0.43-0.55) and no background or relay payment is grouped. But only 35-46% of medium payments get
+  a group, because the scheme model misses the rest.
+- **Honest test** (three fold seeds, pooled / fold mean): best setting (0.2, 60 minutes) 61.6 / 63.5,
+  13 of 15 folds better than the combined model; the 67.1 recipe scores 62.3 / 63.1, 14 of 15.
+- **Decision:** dropped. No better than what we uploaded; the scheme model's misses on medium cases
+  now limit it, not the grouping.
+
+### ~14:05 — The 67.1 recipe: seed bagging, and not learning from hard positives (Jack, with Claude Code)
+- **Change:** experiment only. (a) Each of the three LightGBMs averaged over seeds 42, 43 and 44.
+  (b) The combined model trained without the 225 hard and ambiguous positives (Alim's 12:00 idea);
+  the two-question part already leaves relays out.
+- **Honest test** (three fold seeds, pooled / fold mean, folds better than the 67.1 recipe): recipe
+  62.3 / 63.1; bagged 62.4 / 63.1, 11 of 15; not learning hard 62.1 / 62.8, 4 of 15; both 62.0 / 62.7,
+  4 of 15.
+- **Decision:** both dropped. Bagging is inside the noise; not learning from hard positives hurts here,
+  as it did on run 3's pipeline. The 67.1 recipe stays the final entry unless something beats it.
+
 ## External data
 
 Every dataset we use that didn't come from the organisers. Required by the organisers' rules
