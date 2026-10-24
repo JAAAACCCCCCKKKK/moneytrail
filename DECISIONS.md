@@ -186,6 +186,13 @@ fall on both sides inflates the score.
 - **Decision:** kept as the run 3 candidate; the leaderboard decides whether the one-point gain
   is real.
 
+### ~11:45 — Guilt by association, two rounds, whole-week neighbours (Alim)
+- **Change:** `src/stage2.py`. Round 1 is run 2's model; its scores become 12 neighbour clues per payment (mean, max and count of scores for money into the sender, the sender's other outgoing, the receiver's other incoming, and money out of the receiver, leaving the payment itself out). Round 2 retrains with them. Nested honest test on `src.train`'s folds: round 1 is retrained inside every fold, with an inner out-of-fold split, so no clue sees a held-out answer.
+- **Why:** labels "follow the money", and the hard relays look ordinary payment by payment.
+- **Honest test:** round 1 reproduces run 2 exactly (54.9, folds 57.3 ± 9.9). Round 2: **54.6**, folds 56.7 ± 10.6, better in only 2 of 5 folds. Medium in the top 1% 0.05 → 0.07 (noise-sized); hard still 0.00.
+- **Leaderboard:** not uploaded.
+- **Decision:** dropped (fails our rule: more than a point and at least 4 of 5 folds). Likely reason: the hard-relay wallets are busy innocent-looking wallets (about 60 payments a week), so whole-week neighbour averages are dominated by innocent traffic. Code kept in `src/stage2.py` for the record.
+
 ## AI use
 
 - **Claude Code (Claude Opus 5 and Claude Opus 5.5, Anthropic).** Used to inspect the dataset,
