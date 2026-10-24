@@ -16,8 +16,9 @@ fall on both sides inflates the score.
   the "One model on both teams' clues" entry below.
 - Earlier: 30% run 3 + 70% Violet 65.6 (Violet's old file can't be recreated, so not a safe final
   entry); 50/50 65.5; Violet v2 alone 65.1; run 3 62.0; Jack's candidate B 61.8 (dropped).
-- **Main pipeline: Jack's `src/`** (`python3 -m src.train`). Honest test 54.9 (folds 57.3 ± 9.9).
-  `main.py` is kept only for comparison.
+- **Main pipeline now:** `src/predict_union.py` (combined model) + `detector/` (Violet's model)
+  + `src/blend.py`. New clues should be tested in the combined model. Violet's reproducibility bug
+  is fixed (12:40). `python3 -m src.train` and `main.py` are kept only for comparison.
 - **New clues go into the `src/` pipeline.** After changing features, delete `data/cache/`
   or the old cached features are reused.
 - **Current best pipeline:** Jack's `python3 -m src.predict_shapes_v2` (typology detectors,
