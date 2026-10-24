@@ -820,6 +820,22 @@ fall on both sides inflates the score.
 - **Decision:** no signal (a model of bank transfers doesn't transfer to this ledger). Built as a
   probe at the captain's request; the 67.8 version stays the final entry unless this beats it.
 
+### ~14:45 — gdn6's Isolation Forest clues (gdn6; tested by Alim, with Claude Code)
+- **Change:** experiment only. `src/anomaly.py` (gdn6, `cc51017`): unsupervised Isolation Forests,
+  fitted on each week's own rows without labels, give four clues: how unusual a payment's whole clue
+  profile is (`anom_txn`, and `anom_txn_nonhub` with "normal" learned from non-hub payments), and how
+  unusual the sender's and receiver's week is. Tested through an adapter, because the file expects
+  columns `SENDER`, `RECEIVER`, `DATETIME`, `USD_VALUE` and would read our seconds as nanoseconds;
+  the file itself is unchanged.
+- **Honest test** (same folds as the 67.8 version, refit in the same run, which reproduces 63.72):
+  `anom_txn` alone AP **27.5** (chance 3.1), a real signal for a method that never sees labels.
+  In the gate: combined model 64.02 (3 of 5 folds), structure model 63.77 (2 of 5), both 64.08
+  (2 of 5).
+- **Leaderboard:** not uploaded.
+- **Decision:** dropped. The supervised models already capture what makes a payment unusual; +0.3
+  in 2-3 of 5 folds is noise, and today's +0.5 and +1.2 honest gains both lost more than a point on
+  the leaderboard.
+
 ### ~14:50 — Averaging seeds and model kinds on the 67.8 gate (Violet, with Claude)
 - **Change:** `src/predict_union.py --seeds N` averages LightGBM over seeds 42, 43, ...; `--xgb` also
   trains XGBoost (400 trees, depth 6, same sampling) on the same seeds and averages it 50/50 with
