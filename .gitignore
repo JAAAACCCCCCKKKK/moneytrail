@@ -17,6 +17,4 @@ Thumbs.db
 .idea/
 .vscode/
 starter_notebook.ipynb
-
-# Our run outputs (predictions, run summaries)
-outputs/
+outputs/last_run.json
