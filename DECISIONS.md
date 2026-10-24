@@ -126,6 +126,41 @@ Times are London time (BST, UTC+1) and approximate for the first three entries.
 - **Honest test:** not measured (analysis only).
 - **Decision:** priority order for the team: easy and medium first (first-time pairing, tempo, bursts, shapes); hard cases from 14:30 with group-level and guilt-by-association clues.
 
+### ~11:30 — graph.py and features_shapes.py: one detector per laundering typology (Jack)
+- **Change:** `graph.py` builds each week's network, the hub list, time-windowed wallet groups,
+  wallet histories, and `smooth_by_group` for `main.py`. `features_shapes.py` follows the clue-file
+  format and adds 34 typology detectors on top of run 2's 141 behaviour and group clues (175
+  `shape_*` columns): fan-in and fan-out at 10 min, 1 h and 6 h with amount spread;
+  gather-scatter; scatter-gather two-hop paths; short loops; a time-respecting forward and
+  backward search for long loops and layered depth; almost-whole chains; bipartite density; hub
+  flags; first-time pair and pair frequency.
+- **Hubs:** exactly 8 per week, the liquidity providers inside conversion legs (235-280
+  counterparties, next wallet about 120). All their training payments are background. A
+  "twice the median" peer threshold was dropped: it flagged 2 extra wallets in train and none in
+  test, so the clue would differ by week.
+- **Does each detector find its typology?** Average precision at picking out the suspicious
+  payments of that family, against a chance level of 0.2-0.4%: on a loop 0.282 (cycle),
+  fan-in at 10 min 0.222, two-hop paths 0.196 (fan-out-in), bipartite density 0.154, chain depth
+  0.141, layered depth 0.111 (multi-stage), fan-out at 10 min 0.109. Layered stacks and random
+  networks are not found by any single detector (0.005-0.013).
+- **What didn't work first:** 2-3 hop loop checks found no cycles (0.002) because planted cycles
+  run 6-8 hops and lose value on the way (77 USD out, 33 back). A forward-only search found loops
+  only from the payment that starts one (0.105); adding a backward search and testing whether
+  the two reach sets meet fixed it (0.282).
+- **Honest test** (`main.py` folds, so not comparable with the 54.9 of run 2's own script):
+  run 2's clues 53.8 raw, 56.5 smoothed; typology detectors alone 51.3 raw, 53.6 smoothed;
+  everything 55.1 raw, 56.9 smoothed; rank blend 0.75 everything + 0.25 typology-only, smoothed,
+  **57.6 +/- 6.1** (all folds together 57.1). Medium caught in the top 5%: 0.16 for run 2's clues,
+  0.24 for the blend. The gain is about one point, inside the fold spread.
+- **Test predictions:** `python -m src.predict_shapes_v2` writes
+  `outputs/predictions_shapes_v2.csv`; it passes the checker (40,101 rows, all distinct). Rank
+  correlation with run 2's test scores 0.865; top-401 overlap 340.
+- **For Alim:** `main.py` has no group smoothing yet, and it was worth about 2.7 points here;
+  `graph.smooth_by_group(scores, payments, week)` is ready to call on the test scores.
+- **Leaderboard:** not uploaded.
+- **Decision:** kept as the run 3 candidate; the leaderboard decides whether the one-point gain
+  is real.
+
 ## AI use
 
 - Claude Code (Claude Opus 5.5, Anthropic): ran the starter notebook, checked the submission file with our `submission-check` skill, and wrote these log entries, and helped write `main.py`, `common.py` and `features_starter.py`. Prompts: the skill files in `.claude/skills/`.
