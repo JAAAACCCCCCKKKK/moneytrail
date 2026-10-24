@@ -9,16 +9,16 @@ fall on both sides inflates the score.
 
 ## Where we are now (update this after every upload)
 
-- **Best leaderboard score: 66.7** (attempt 16): the 66.4 blend plus the structure model at 0.4
+- **Best leaderboard score: 67.8** (12:55 UTC): the gate, combined probability × structure
+  probability + 10% Violet (`python3 -m src.blend --gate --weight 0.1 ...`,
+  `outputs/predictions_gate_v10.csv`). Code `3572d05`, uploaded with the ZIP of `00f0096` (log
+  commits only on top), which carries `RUN_THIS_VERSION.md` with the four commands. Honest test 63.7
+  against 62.5; leaderboard +1.1 on 66.7. Top 1%: precision 96%, recall 31%.
+- 66.7 (attempt 16): the 66.4 blend plus the structure model at 0.4
   (`src.blend ... --structure predictions_structure.csv --structure-weight 0.4`). Code: commit
-  `ea1300e`. The ZIP uploaded with attempt 16 was built before the structure code was restored
-  (see ~13:20), so the same CSV must be re-uploaded with the corrected ZIP before the deadline.
-  **Fresh-clone check (13:35):** a new clone of GitHub `main` at `3b4ec60`, raw data only (no
-  cache), running the four commands in the ZIP's `RUN_THIS_VERSION.md`, recreates all four files
-  byte for byte, including the uploaded 66.7 CSV.
-- **Next candidate (13:50): the gate,** combined probability × structure probability + 10%
-  Violet (`predictions_gate_v10.csv`, commit `3572d05`): honest test 63.7 against 62.5, 5 of 5
-  folds. Leaderboard to confirm.
+  `ea1300e`, re-uploaded with the corrected ZIP. **Fresh-clone check (13:35):** a new clone of
+  GitHub `main` at `3b4ec60`, raw data only (no cache), running the four commands in the ZIP's
+  `RUN_THIS_VERSION.md`, recreates all four files byte for byte, including the uploaded 66.7 CSV.
 - 66.4 (attempt 12): 50/50 blend of the combined model and Violet's fixed model, fully reproducible.
 - Earlier: 30% run 3 + 70% Violet 65.6 (Violet's old file can't be recreated, so not a safe final
   entry); 50/50 65.5; Violet v2 alone 65.1; run 3 62.0; Jack's candidate B 61.8 (dropped).
@@ -601,7 +601,10 @@ fall on both sides inflates the score.
   top 401 shared), `predictions_gate.csv` (0.961, 340), `predictions_gate_v30.csv` (0.997, 349).
   All pass the checker; rerun under a different hash seed, byte-identical. Commit `3572d05`; the
   default blend path still recreates the 66.7 file byte for byte.
-- **Leaderboard:** not uploaded yet. Upload order: `gate_v10`, then `gate`, then `gate_v30`.
+- **Leaderboard:** `gate_v10` uploaded 12:55 UTC (13:55 BST): **67.8**, +1.1 on 66.7 (honest
+  test predicted +1.2, the closest carry-over so far). Top 1%: precision 96%, recall 31%; easy 50%,
+  medium 10%, observable hard 0%, ambiguous 0%. New best. Still to probe: `gate` (no Violet), then
+  `gate_v30`.
 - **Decision:** candidate. Next: add Jack's once-a-week-pair groups (`--once-groups`) to the
   structure model only, since the structure step is where the remaining reachable points are.
 
