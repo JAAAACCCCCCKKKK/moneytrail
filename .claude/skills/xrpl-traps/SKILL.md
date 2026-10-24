@@ -59,8 +59,11 @@ this list, follow the README and tell the user about the difference.
   summary rows). If the challenge data has them, check the README before counting
   them as money movements, or value will be double-counted.
 
-## Leakage checks
+## Leakage and rules checks
 
+- Use only the organisers' data. The rules forbid outside transaction or
+  reference data without their approval (public docs and papers are fine). Flag
+  any code that pulls in other data.
 - Never use wallet addresses, transaction hashes or exact timestamps as model
   features: the test week has different wallets and new variations.
 - Any feature built from labels (for example "how suspicious are this wallet's

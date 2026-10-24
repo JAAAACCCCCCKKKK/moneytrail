@@ -10,6 +10,10 @@ version before confirming a prize. So every upload must be a valid file *and* a
 committed, reproducible version of the code. A rejected or unreproducible run can
 cost first place after it has been won. This checklist prevents that.
 
+These rules come from the participant terms (hackathon.ukcbt.org/terms) and the
+pre-hackathon training. If the organisers announce something different on the
+day, follow what they announce and tell the user what changed.
+
 ## Before every upload
 
 1. **Find the test transaction hashes.** The checker compares the CSV against the
@@ -60,10 +64,22 @@ cost first place after it has been won. This checklist prevents that.
    python3 <this-skill-dir>/scripts/check_submission.py zip code.zip
    ```
 
-   The ZIP must hold the code, the exact run command, seeds, dependencies, the team
-   list, the commit, the results, and a method write-up (under 10 slides or 4
-   pages). At most 8 MiB. No installed packages, no secrets.
-4. Make sure the repo is public, has an approved open-source licence (for example
-   MIT), and the method write-up names the commit and discloses AI use (model,
-   provider, prompts, settings). If the `decision-log` skill is in use, its
-   `METHOD.md` covers the write-up.
+   At most 8 MiB, with no installed packages, and no private keys, passwords,
+   API keys or data the rules don't allow us to share. The terms ask for all of
+   these, so go through the list with the user:
+   - the code or notebook, plus any prompts used (the skill files count)
+   - the trained model files if we're allowed to release them, or instructions to recreate them
+   - the exact run command, random seeds, dependencies and computing requirements
+   - the team name, the captain and every member
+   - the commit (version) being submitted, and the results
+   - a method write-up of at most 10 slides or 4 pages, covering the data
+     sources, method, evaluation and limitations
+   - a list of every third-party or pre-existing component (libraries, models,
+     services, our pre-hackathon notes and skills) with its source and licence
+   - any external resources or APIs used
+   - for AI tools: the model, provider, prompts, settings and any limits on
+     reproducing that part
+4. Make sure the repo is public by the deadline, has an approved open-source
+   licence (for example MIT or BSD 3-Clause) with its copyright notice, and that
+   every team member has accepted the terms. If the `decision-log` skill is in
+   use, its `METHOD.md` covers the write-up and disclosures.
