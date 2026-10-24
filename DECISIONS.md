@@ -849,7 +849,7 @@ fall on both sides inflates the score.
 - **Decision:** dropped. Seed noise isn't what limits the gate; a second model kind doesn't add
   information on the same clues. 67.8 stays the final entry.
 
-### ~15:20 — Hard relays: direction of money flow as a clue (Alim, with Claude Code)
+### ~14:55 — Hard relays: direction of money flow as a clue (Alim, with Claude Code)
 - **Change:** experiment only (scripts in Claude Code's scratchpad, not in the repo). Prompted by the
   leaderboard panel (observable hard 0% in the top 1%).
 - **What a hard relay looks like:** three bursts on days 0, 3 and 6 through the same one or two middle
@@ -881,7 +881,7 @@ fall on both sides inflates the score.
   capacity; hard relays count in the score wherever they rank above innocent payments. 67.8 stays the
   final entry.
 
-### ~15:40 — Hard relays: a second observable signal, steady pass-through (Alim, with Claude Code)
+### ~15:00 — Hard relays: a second observable signal, steady pass-through (Alim, with Claude Code)
 - **Change:** experiment only (scratchpad scripts). Tested the deck's "whole flow" ideas on the true
   relay schemes (labels used only to group and measure): new outside wallets each burst, pass-through
   per burst, delays, end-to-end value, whether sinks pay on and sources were funded, links to easy or
@@ -927,7 +927,7 @@ learning only and are not used by any of our code; see `prep/RESEARCH.md`.
   in the 13:45 entry), `tools/track_outputs.py`, `tools/check_zip_limits.py`, the release workflow
   `.github/workflows/release.yml`, and the gate options in `src/blend.py` and `src/predict_union.py`;
   run the 13:40 analysis of lost points and hard relays; merge Jack's branch and find and fix the
-  hash-seed bug in `features_shape_signals.py` (14:10); run the 15:20 and 15:40 hard-relay
+  hash-seed bug in `features_shape_signals.py` (14:10); run the 14:55 and 15:00 hard-relay
   experiment (including rebuilding the gate's out-of-fold scores); and draft this log. Settings: default Claude
   Code configuration, no custom temperature or sampling parameters. Prompts: the conversation
   was interactive; the reusable prompts are the three skill files in `.claude/skills/`, which
