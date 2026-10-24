@@ -15,7 +15,8 @@ fall on both sides inflates the score.
   commits only on top), which carries `RUN_THIS_VERSION.md` with the four commands. Honest test 63.7
   against 62.5; leaderboard +1.1 on 66.7. Top 1%: precision 96%, recall 31%.
 - **Gate 2 (14:10) dropped:** Jack's signals model × his scheme model + 10% Violet scored 66.4
-  (honest test 64.2). 67.8 stays the final entry.
+  (honest test 64.2). **Violet's smoothed gate (14:30) dropped:** 66.6 (honest test 64.9). 67.8
+  stays the final entry.
 - **67.1 (Jack's two questions, branch `dynamic`, commit `ed19b17`, merged into `main` at
   ~14:10; can't be recreated exactly, see 14:10):** P(planted scheme) × P(suspicious | scheme) on the combined clues + deck signals +
   once-a-week-pair groups, rank-blended 50/50 with the combined model + signals, then 50/50 with
@@ -784,6 +785,22 @@ fall on both sides inflates the score.
   forward/backward flow clues (61.5); a model of forward vs backward relays (AUC 0.78 for the
   direction, 0.68 guilty vs innocent relay) as a gate factor (62.16, no change); "guilty given
   planted" third factor (60.8); structure power 0.5-3 (61.7-62.3, flat).
+
+### ~14:30 — Violet's gap-cluster smoothing on the gate (Violet; checked and logged by Alim, with Claude Code)
+- **Change:** `src.blend --gate --smooth 0.2` (Violet, `95a2b17`): each payment's gate score (log scale)
+  mixed 80/20 with the mean gate score of its gap clusters at 2, 5, 10 and 15 minutes, then the usual
+  10% Violet. Her file `predictions_gate_v10_smooth20.csv` recreates byte for byte from that command.
+- **Honest test** (same out-of-fold scores and folds as the 67.8 version's 63.72): smoothing 0.1
+  64.91, **0.2 64.92 (folds 65.1 ± 5.0, better in 4 of 5)**, 0.3 64.66. Rank correlation with the
+  67.8 file 0.999; 361 of the top 401 shared.
+- **Leaderboard:** 13:28 UTC: **66.6** (−1.2 on 67.8). Top 1%: precision 94%, recall 30%; easy 50%,
+  medium 10%. (Violet's entry above gives 66.4 with precision 92% and medium 0%, which is exactly the
+  panel of the 13:14 UTC gate 2 upload; an identical file can't score differently. To check.)
+- **Decision:** dropped. Second change in a row whose honest-test gain turned into a leaderboard loss
+  of more than a point (gate 2: +0.5 → −1.4; this: +1.2 → −1.2). The test week's schemes respond
+  differently from the training week's to anything that regroups or re-weights the top of the list,
+  so our honest test can no longer judge refinements of the gate. **67.8
+  (`predictions_gate_v10.csv`) is the final entry.**
 
 ## External data
 
