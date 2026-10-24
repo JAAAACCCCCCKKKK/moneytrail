@@ -13,6 +13,9 @@ fall on both sides inflates the score.
   (`src.blend ... --structure predictions_structure.csv --structure-weight 0.4`). Code: commit
   `ea1300e`. The ZIP uploaded with attempt 16 was built before the structure code was restored
   (see ~13:20), so the same CSV must be re-uploaded with the corrected ZIP before the deadline.
+  **Fresh-clone check (13:35):** a new clone of GitHub `main` at `3b4ec60`, raw data only (no
+  cache), running the four commands in the ZIP's `RUN_THIS_VERSION.md`, recreates all four files
+  byte for byte, including the uploaded 66.7 CSV.
 - 66.4 (attempt 12): 50/50 blend of the combined model and Violet's fixed model, fully reproducible.
 - Earlier: 30% run 3 + 70% Violet 65.6 (Violet's old file can't be recreated, so not a safe final
   entry); 50/50 65.5; Violet v2 alone 65.1; run 3 62.0; Jack's candidate B 61.8 (dropped).
