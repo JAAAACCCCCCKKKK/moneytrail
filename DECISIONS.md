@@ -749,8 +749,12 @@ fall on both sides inflates the score.
 - **Test predictions:** `python -m src.predict_generator --mode G` -> `outputs/predictions_generator_G.csv`;
   blended with Violet's fixed model like the 67.1 entry -> `predictions_blend_generator_G_violet.csv`;
   same for G4. Both pass the checker.
-- **Leaderboard:** not uploaded yet. Largest honest-test gain of the afternoon, still under the
-  1.5-point rule, so the leaderboard decides.
+- **Leaderboard:** G and G4 both **67** (reported by Jack), level with the 67.1 entry: the honest-test
+  gain of +0.8 did not carry to the test week. The leader stands at 75, about 8 points above us, which
+  matches the 13:45 ceiling analysis: the missing points are in medium and hard, where whole-scheme
+  grouping decides, not in more clues.
+- **Decision:** the generator model is reproducible (byte-identical under another hash seed) and
+  scores level with our best, so it is a valid final entry; see "Where we are now" for the choice.
 
 ## External data
 
