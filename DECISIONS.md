@@ -14,11 +14,21 @@ fall on both sides inflates the score.
   `outputs/predictions_gate_v10.csv`). Code `3572d05`, uploaded with the ZIP of `00f0096` (log
   commits only on top), which carries `RUN_THIS_VERSION.md` with the four commands. Honest test 63.7
   against 62.5; leaderboard +1.1 on 66.7. Top 1%: precision 96%, recall 31%.
+- **Next probe (14:10): gate 2,** Jack's signals model × his scheme model + 10% Violet
+  (`outputs/predictions_gate2_v10.csv`): honest test 64.2 against 63.7. See the 14:10 entry.
+- **67.1 (Jack's two questions, branch `dynamic`, commit `ed19b17`, merged into `main` at
+  ~14:10; can't be recreated exactly, see 14:10):** P(planted scheme) × P(suspicious | scheme) on the combined clues + deck signals +
+  once-a-week-pair groups, rank-blended 50/50 with the combined model + signals, then 50/50 with
+  Violet (`python -m src.predict_two_q`, then `src.blend --run3 predictions_two_q.csv ...`,
+  `outputs/predictions_blend_two_q_violet.csv`). Honest test 62.3 pooled / 63.1 fold mean.
 - 66.7 (attempt 16): the 66.4 blend plus the structure model at 0.4
   (`src.blend ... --structure predictions_structure.csv --structure-weight 0.4`). Code: commit
   `ea1300e`, re-uploaded with the corrected ZIP. **Fresh-clone check (13:35):** a new clone of
   GitHub `main` at `3b4ec60`, raw data only (no cache), running the four commands in the ZIP's
   `RUN_THIS_VERSION.md`, recreates all four files byte for byte, including the uploaded 66.7 CSV.
+- Also 66.7 (Jack's run 17, 12:21 UTC, `moneytrail-run17`, code `a336f9d`): 50/50 blend of
+  the combined model with Jack's deck signals (`python -m src.predict_union_signals`) and Violet's
+  fixed model. Top 1%: precision 95%, recall 31%. Reruns byte for byte.
 - 66.4 (attempt 12): 50/50 blend of the combined model and Violet's fixed model, fully reproducible.
 - Earlier: 30% run 3 + 70% Violet 65.6 (Violet's old file can't be recreated, so not a safe final
   entry); 50/50 65.5; Violet v2 alone 65.1; run 3 62.0; Jack's candidate B 61.8 (dropped).
@@ -486,6 +496,46 @@ fall on both sides inflates the score.
   of the top 401 shared). Every part of it reruns to an identical file.
 - **Leaderboard:** attempt 12, **66.4** (+0.8 on 65.6; honest test predicted +2.2).
 
+### ~13:00 — The deck's shape table, signal by signal: gaps closed (Jack)
+- **Audit:** every "signal to compute" in the deck's eight-shape table checked against both
+  pipelines. Not computed anywhere: middle wallets with no other activity or used once, a
+  bipartite block's contacts outside itself, value into against out of a group, assets changing
+  along a loop. Partly: new or quiet fan-in senders, recipients' forwarding across a fan-out,
+  loop duration, routes longer than 2 hops, source-out against destination-in value, similar
+  hold times. Violet's v2 (65.1) also lacks Jack's two-hop paths, bipartite density,
+  sender-receiver overlap, layered depth and hub exclusion, and its return check searches
+  forward only, so it fires only on the payment that starts a loop.
+- **Change:** `features_shape_signals.py`, 51 `sig_*` clues covering every gap above (hubs set
+  aside; groups at 5 and 10 minutes and once-a-week groups at 1 hour). Option `--signals` in
+  `src/predict_shapes_v2.py`; run 3 and candidate B still reproduce byte for byte without it.
+  The loop-asset clue is computed but removed by `--drop-conversion`, as the README says asset
+  choices ignore the labels. Wallet age: every account's `Sequence` starts at 1 each week and
+  rises by one per payment (alone: AP 0.030 against 0.031 chance), so it is a payment counter,
+  not an age; "new" means first seen this week within the last 6 hours.
+- **Does each signal find its typology?** (`python -m experiments.shape_signals_check`; average
+  precision at picking out the family's suspicious payments, chance 0.002-0.004; previous best
+  in brackets): cycle, loop hops **0.61** and loop duration 0.48 (0.28); scatter-gather, quiet
+  middle wallets 0.25, value out against in 0.23 (0.20); multi-stage, distinct routes 0.19
+  (0.11); layered stack, routes 0.07 (0.01); bipartite, share of traffic inside the block 0.024.
+  Several also separate laundering from same-shape honest schemes: loop duration 0.79 (base rate
+  0.41), routes in stacks 0.78 and middle wallets used once 0.75 (0.53), quiet middles 0.72
+  (0.54). No signal: quiet or new fan-in senders, exit against sum in, last deposit to exit,
+  recipients' forwarding speed, group closure (all at chance).
+- **Honest test** (`main.py` folds, group smoothing, 0.75/0.25 blend; against candidate B):
+  +1.1, +0.1, +1.1 on seeds 42, 7, 2026; better in 11 of 15 folds. Medium in the top 5%:
+  0.24 → 0.26, 0.19 → 0.24, 0.17 → 0.23. Easy in the top 5%: 0.97 → 0.95.
+- **Test predictions:** `python -m src.predict_shapes_v2 --drop-conversion --week-rank --signals
+  --out predictions_shift_b_signals.csv`; passes the checker; top-401 overlap with run 3 319,
+  with B 324.
+- **Not taken further:** a script feeding these clues into Violet's two-stage model
+  (`src/combined.py`) was stopped before it produced a result and removed. It overlapped Alim's
+  `src/predict_union.py`, now the main pipeline, and it read Violet's code from before her
+  reproducibility fix (12:40). No cached features from it were kept.
+- **Next:** test these signals in the combined model, where new clues now go. `src.predict_union`
+  builds Jack's clues through `prepare()`, so `prepare(signals=True)` adds them.
+- **Leaderboard:** not uploaded, and this file should not be uploaded as is: its base, candidate B,
+  scored 61.8 (attempt 10), below run 3's 62.0.
+
 ### ~13:15 — Structure model: "is this part of a planted scheme, guilty or not?" (Alim, Jack's idea)
 - **Change:** `python3 -m src.predict_union --target structure`: a second LightGBM on the combined
   model's 412 clues, trained to answer "is this payment part of a planted shape scheme
@@ -510,6 +560,15 @@ fall on both sides inflates the score.
   measures the structure gain alone. Then Violet's share 30% as a separate probe.
 - **Leaderboard:** attempt 16, **66.7** (+0.3 on 66.4). Much less than the honest test's +1.9: the
   structure model's picture of a compact planted scheme carries over to the test week only partly.
+
+### ~13:20 — Combined model + deck signals, blended with Violet (Jack, uploaded by the team)
+- **Change:** `python -m src.predict_union_signals` (the combined model with `features_shape_signals.py`
+  added), then a 50/50 rank blend with Violet's fixed model (`src.blend --run3
+  predictions_union_signals.csv --violet predictions_violet_v2_fixed.csv`). Recreated byte for byte at 13:45.
+- **Leaderboard:** 12:21 UTC, `moneytrail-run17-code.zip`, code at `a336f9d`. Score **66.7** (66.4
+  before). Top 1%: precision 95%, recall 31%; easy 50%, medium 10%, observable hard 0%, ambiguous 0%;
+  ROC-AUC 0.91.
+- **Decision:** kept, best so far.
 
 ### ~13:20 — Jack's reset of `main` removed three commits; two restored (Alim)
 - Jack reset GitHub's `main` to `58696ff` (12:57), which removed his `a336f9d` (shape signals),
@@ -583,6 +642,50 @@ fall on both sides inflates the score.
   through busy wallets. Not built today; a lead for the write-up.
 - **Decision:** the reachable gain is in how the structure model is used (next entry).
 
+### ~13:45 — Why we plateau near 65, and two questions with slow-scheme groups (Jack, with Claude Code)
+- **Where the points go** (combined model + signals, `main.py` folds, honest test 60.4): easy cases
+  give 51.9 points (mean precision at an easy case 0.81), medium 5.8 (0.32), hard relays 2.4,
+  ambiguous 0.3. Easy is close to its limit: 17 of 140 honest look-alike schemes are as fast as
+  laundering. Medium sits at a median rank of 3,856, below 913 relay and 291 background payments
+  in the top 2,500.
+- **Ruled out first (each alone, AUC about 0.50):** decimal places of the delivered amount, round USD
+  amounts, wallets reused across suspicious schemes, how busy a scheme's wallets are, scheme size
+  and wallet count. The generator matches suspicious and honest schemes on everything except speed.
+- **Ceiling (labels used only to measure it):** knowing which payments belong to a planted shape
+  scheme, grouping each scheme exactly, and ranking schemes by how often a scheme of that speed is
+  suspicious would score **about 72**. Either half alone adds only about 1.5 (true scheme membership
+  61.7; exact grouping 62.1), because a medium scheme runs at about 18 minutes between payments
+  while our groups are 2 to 10 minutes wide, so its payments look like isolated background ones.
+  Slow schemes are still about 1 in 4 suspicious (median gap 960-1,920s: 31%; 480-960s: 16%),
+  far above any background or relay payment.
+- **Change:** new file `src/predict_two_q.py`. Two LightGBM
+  models on the combined clues plus the once-a-week-pair group clues (`features_motifs_once.py`):
+  (1) on every row, "is this part of a planted shape scheme, suspicious or not?" (`family` outside
+  background, the two relays and ambiguous; a training target only, never a clue); (2) on scheme rows
+  only, `is_suspicious`. Score (1) × (2), unsmoothed, rank-blended 50/50 with the combined model.
+  96% of scheme payments are once-a-week pairs against 28% of background and 36% of relay ones.
+- **Honest test** (`main.py` folds, three fold seeds, pooled / fold mean): combined model 60.2 / 60.6;
+  **two questions blended 62.3 / 63.1, better in 14 of 15 folds** (seed 42 61.8 / 62.0, 4 of 5;
+  seed 7 62.7 / 63.7, 5 of 5; seed 2026 62.4 / 63.7, 5 of 5). Medium median rank 3,856 → about 2,630;
+  easy in the top 1,250 0.93 → 0.97. The two-question score alone 59.7 / 60.7; the once clues put into
+  the single model lower it (59.5 vs 60.4, seed 42); group smoothing of the product lowers it too. A
+  share of 25% to 50% for the two-question score is flat (62.0 vs 61.8, seed 42), so blending with
+  Violet's model, which halves its share, costs nothing.
+- **Why the 12:35 two-question test didn't carry over alone:** without the once-a-week-pair groups the
+  second model can't see a slow scheme's speed, so medium stays buried (58.8 on the combined clues).
+- **Test predictions:** `python -m src.predict_two_q` writes `outputs/predictions_two_q.csv`; reruns
+  byte-identical under a different Python hash seed. Upload candidate:
+  `python -m src.blend --run3 predictions_two_q.csv --violet predictions_violet_v2_fixed.csv --out
+  predictions_blend_two_q_violet.csv`, built exactly like the 66.7 file. Both pass the checker. Rank
+  correlation with the 66.7 file 0.975; top-401 overlap 380, so the change is mostly below rank 400,
+  where medium lives (the leaderboard panel's top-1% bars won't show it).
+- **Risk:** the test week has fewer very fast scheme-like groups than training (gap ≤60s: 24 vs 43),
+  which fits the README's "batch variations"; the 50/50 blends keep the single models as a safety net.
+- **Leaderboard:** **67.1** (reported by Alim; time and top-1% panel to confirm), against
+  66.7 for run 17. Merged into `main` at ~14:05.
+- **Next if time:** better grouping for slow schemes. Once-pair groups at 30 minutes estimate a medium
+  scheme's gap at only 0.43-0.55 of its true value and leave 30% of medium payments ungrouped.
+
 ### ~13:50 — Gate: combined probability × structure probability (Alim, with Claude Code)
 - **Change:** `python3 -m src.predict_union --probabilities` writes probabilities instead of ranks
   (intermediate files). `python3 -m src.blend --gate` multiplies the combined model's group-smoothed
@@ -603,8 +706,12 @@ fall on both sides inflates the score.
   default blend path still recreates the 66.7 file byte for byte.
 - **Leaderboard:** `gate_v10` uploaded 12:55 UTC (13:55 BST): **67.8**, +1.1 on 66.7 (honest
   test predicted +1.2, the closest carry-over so far). Top 1%: precision 96%, recall 31%; easy 50%,
-  medium 10%, observable hard 0%, ambiguous 0%. New best. Still to probe: `gate` (no Violet), then
-  `gate_v30`.
+  medium 10%, observable hard 0%, ambiguous 0%. New best. **Fresh-clone check (~14:00):** a new
+  clone of GitHub `main` at `00f0096`, raw data only (no cache), running the four commands in the
+  ZIP's `RUN_THIS_VERSION.md` (10 minutes), recreates all four files byte for byte, including the
+  uploaded CSV. `gate` (no Violet) uploaded as attempt 23: **67.6** (top 1%: precision 98%, easy
+  50%, medium 10%), so the 10% Violet share is worth +0.2 on the leaderboard although the honest
+  test had it at -0.04.
 - **Decision:** candidate. Next: add Jack's once-a-week-pair groups (`--once-groups`) to the
   structure model only, since the structure step is where the remaining reachable points are.
 
@@ -621,6 +728,42 @@ fall on both sides inflates the score.
 - **Leaderboard:** not uploaded.
 - **Decision:** dropped. A better structure model, but the gain in the final score is inside the
   noise and fails our rule (more than a point, at least 4 of 5 folds).
+
+### ~14:10 — Jack's `dynamic` branch merged; his signal clues made reproducible; gate 2 (Alim, with Claude Code)
+- **Merge:** `origin/dynamic` (Jack's deck signals `a336f9d` and two questions `ed19b17`, 67.1)
+  merged into `main`. Code merged without conflicts; the three logs were merged by hand (every
+  entry from both sides kept, in time order). Checked on the merged code: the 67.8 file still
+  recreates byte for byte.
+- **Problem found:** Jack's two-question file did not recreate on Alim's laptop (rank correlation
+  0.979 with his committed `predictions_two_q.csv`; 0.950 for `predictions_union_signals.csv`).
+  Cause: the same bug as Violet's (12:40). `features_shape_signals.py` walked through Python sets
+  of wallet addresses, whose order changes every time Python starts, when adding up money, listing
+  hold times and choosing among tied destinations and loops. Built from scratch under two hash
+  seeds, 15 of its 51 clues differed (on 21 to 5,853 payments each). Earlier "byte-identical"
+  reruns read the cached clues instead of rebuilding them.
+- **Fix (approved by Alim as captain):** sort those sets before walking through them (five loops),
+  and cache version `v1` → `v2` so no old cached clues are reused. Under three hash seeds, all 51
+  clues are now identical. Jack's 67.1 file itself can't be recreated by anyone, so it is not a
+  safe final entry; files built with the fixed clues are.
+- **Change:** `src/predict_union.py --signals` (Jack's deck signals without the loop-asset clue, as
+  `src.predict_union_signals`) and `--once-groups`. **Gate 2** = combined model + signals (smoothed
+  probability) × structure model + signals + once-a-week-pair groups (Jack's scheme model), through
+  the same `src.blend --gate`.
+- **Honest test** (`main.py` folds, out of fold, fixed clues; against the 67.8 version's 63.72,
+  folds 64.3 ± 5.2): gate 2 **64.39 (folds 64.8 ± 5.6, better in 4 of 5)**; + 10% Violet **64.22
+  (64.5 ± 5.5, 3 of 5)**; + 20% 63.83; + 30% 63.29. Signals model × our structure model 64.36 (4 of
+  5). With the unfixed clues (one random wallet order) the same gate 2 scored 64.88, so that bug
+  alone moved the honest test by about half a point. Also tested before the fix and not better:
+  Jack's two-question file 60.8 on these folds; rank-mixing our gate with it 63.3-63.7;
+  multiplying in his "suspicious given a scheme" model as well 63.2-64.7.
+- **Test files:** `predictions_gate2_v10.csv` (rank correlation 0.936 with the 67.8 file, 360 of the
+  top 401 shared) and `predictions_gate2_v0.csv` (0.929, 359). Both pass the checker.
+- **Leaderboard:** not uploaded yet. Upload `gate2_v10` first (Violet's 10% was worth +0.2 on the
+  leaderboard for gate 1), then `gate2_v0`.
+- **Decision:** candidate, but below our rule (+0.5 to +0.7, not more than a point): an upload
+  probe only, since only the best upload counts. The 67.8 version stays the safe final entry
+  unless gate 2 beats it.
+
 
 ## External data
 
@@ -642,9 +785,11 @@ learning only and are not used by any of our code; see `prep/RESEARCH.md`.
   submission files with our `submission-check` skill, write `src/honest_eval.py`,
   `notebook_features.py`, `src/data.py`, `src/motifs.py`, `src/features.py`, `src/train.py`,
   `main.py`, `common.py`, `features_starter.py`, `graph.py`, `features_shapes.py`,
-  `src/predict_shapes_v2.py`, `tools/track_outputs.py`, `tools/check_zip_limits.py`, the
-  release workflow `.github/workflows/release.yml`, and the gate options in `src/blend.py` and
-  `src/predict_union.py`; run the 13:40 analysis of lost points and hard relays; and draft this log. Settings: default Claude
+  `src/predict_shapes_v2.py`, `src/predict_two_q.py` (and the label-structure and ceiling analysis
+  in the 13:45 entry), `tools/track_outputs.py`, `tools/check_zip_limits.py`, the release workflow
+  `.github/workflows/release.yml`, and the gate options in `src/blend.py` and `src/predict_union.py`;
+  run the 13:40 analysis of lost points and hard relays; merge Jack's branch and find and fix the
+  hash-seed bug in `features_shape_signals.py` (14:10); and draft this log. Settings: default Claude
   Code configuration, no custom temperature or sampling parameters. Prompts: the conversation
   was interactive; the reusable prompts are the three skill files in `.claude/skills/`, which
   are kept in this repo.

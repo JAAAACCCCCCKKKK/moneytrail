@@ -18,6 +18,12 @@ used only as the training target, never as a clue.) Medium schemes can't be told
 look-alikes, but both can be told from relays and background, which outrank them. Mixed into
 the blend at 0.4 (src.blend --structure): honest test 60.6 -> 62.5, better in 5 of 5 folds;
 medium in the top 1,250 16% -> 23%.
+
+  python3 -m src.predict_union --signals --probabilities --out predictions_union_signals_prob.csv
+  python3 -m src.predict_union --target structure --signals --once-groups --probabilities --out predictions_scheme_prob.csv
+
+Jack's clues added: his deck signals in both models, and his once-a-week-pair groups in the
+structure model only (his scheme model in src.predict_two_q). Multiplied with src.blend --gate.
 """
 from __future__ import annotations
 
@@ -32,6 +38,7 @@ import common
 import graph
 from main import make_model, OUTPUTS
 from src.predict_shapes_v2 import prepare, CONVERSION_KEYS
+from src.predict_union_signals import LEFT_OUT
 
 SHAPES = ["bipartite", "chain", "cycle", "fan_in", "fan_out", "fan_out_in", "multi_stage", "random", "stack"]
 
@@ -68,11 +75,18 @@ def main():
     parser.add_argument("--probabilities", action="store_true",
                         help="write the model's probabilities instead of ranks, for src.blend --gate "
                              "(an intermediate file, never uploaded: probabilities can tie)")
+    parser.add_argument("--signals", action="store_true",
+                        help="add Jack's deck signals (features_shape_signals.py) without the loop-asset clue, "
+                             "as src.predict_union_signals")
+    parser.add_argument("--once-groups", action="store_true",
+                        help="add Jack's once-a-week-pair group clues (features_motifs_once.py)")
     parser.add_argument("--out", default=None, help="file name inside outputs/")
     args = parser.parse_args()
     out_name = args.out or ("predictions_union.csv" if args.target == "suspicious" else "predictions_structure.csv")
 
-    train, test, lab, X, Xt = prepare()
+    train, test, lab, X, Xt = prepare(once_groups=args.once_groups, signals=args.signals)
+    if args.signals:
+        X, Xt = X.drop(columns=list(LEFT_OUT)), Xt.drop(columns=list(LEFT_OUT))
     U = pd.concat([X.reset_index(drop=True), violet_clues("train", train.TRANSACTION_HASH)], axis=1)
     Ut = pd.concat([Xt.reset_index(drop=True), violet_clues("test", test.TRANSACTION_HASH)], axis=1)[U.columns]
     if args.no_conversion:
