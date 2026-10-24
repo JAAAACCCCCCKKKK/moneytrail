@@ -2,4 +2,4 @@
 
 | Time | Commit | Honest-test AP | Leaderboard | What changed |
 |---|---|---|---|---|
-| ~10:00 | (this commit) | 24.6 (organisers' random 20% holdout) | | Run 1: the organisers' starter notebook, unchanged (logistic regression, 12 simple rules) |
+| 09:34 UTC | 4d8970d | 24.6 (organisers' random 20% holdout) | **33.6** (top 1%: precision 62%, recall 20%; ROC AUC 0.82) | Run 1: the organisers' starter notebook, unchanged (logistic regression, 12 simple rules) |
