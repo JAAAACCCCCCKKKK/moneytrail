@@ -10,6 +10,7 @@ fall on both sides inflates the score.
 ## Where we are now (update this after every upload)
 
 - **Best leaderboard score: 62.0** (run 3, commit `6641b38`). Top 1%: precision 91%, recall 29%.
+  Run 4 (Jack's 20-minute window + medium weighting) scored 60.8, so it's dropped.
 - **Main pipeline: Jack's `src/`** (`python3 -m src.train`). Honest test 54.9 (folds 57.3 ± 9.9).
   `main.py` is kept only for comparison.
 - **New clues go into the `src/` pipeline.** After changing features, delete `data/cache/`
@@ -245,8 +246,8 @@ fall on both sides inflates the score.
 - **Test predictions:** `python -m src.predict_shapes_v2 --windows 120 300 600 1200
   --medium-weight 6 --out predictions_shapes_v3.csv`; passes the checker; rank correlation with
   run 3 0.842, top-401 overlap 358. Run 3 itself still reproduces byte for byte with the defaults.
-- **Leaderboard:** not uploaded.
-- **Decision:** worth one upload to confirm; keep run 3 as the reference if it doesn't beat 62.0.
+- **Leaderboard:** run 4 ("TEST 3" on the site), uploaded by Jack around 11:30 UTC from commit `a265fa9`. Score **60.8** (run 3 was 62.0, so −1.2). Top 1%: precision 89%, recall 29%. Caught in the top 1%: easy 40%, medium 0% (run 3: 10%), hard 0%.
+- **Decision:** dropped. A gain of about a point on the honest test didn't carry to the test week, and the medium weighting made medium worse in the top 1% (10% → 0%). Lesson: honest-test gains under about 1.5 points are inside the noise; only upload changes with a bigger, consistent gain. Run 3 stays our best.
 
 ### ~12:10 — Hard relays: history and whole-scheme tests, nothing separates them (Alim)
 - **Change:** analysis only. Tested per-payment history ideas on the 200 suspicious relay payments against their ~20,000 innocent look-alikes: amount equals the sum of the sender's last 2-12 incoming (same asset); amount is part of a split of an earlier receipt; amount equals an earlier receipt forwarded intact after an hour; days since the sender's previous payment. All at chance (AP 0.010 against 0.010 chance).
