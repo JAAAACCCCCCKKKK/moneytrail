@@ -36,6 +36,10 @@ Append one entry under **Decisions** each time something is tried:
 - **Decision:** kept / dropped / needs more work, and why
 ```
 
+Whenever an outside dataset is tried, also add a row to the **External data** section of
+`DECISIONS.md` (source, why, how it was used, honest test before and after, kept or not),
+even if it didn't help: the organisers require that disclosure.
+
 Record what was actually measured. If a number isn't known yet, write "not
 measured" rather than estimating, because the write-up will quote these numbers
 as results. Log failed ideas too: "what didn't work" is part of a good method.
@@ -56,7 +60,7 @@ code; where something is missing, ask the team rather than inventing it.
 # <Team name>: method
 
 ## Team (name, captain, every member)
-## Problem and data sources (organiser data only, or anything else approved)
+## Problem and data sources (organiser data, plus every external dataset: why we used it and whether it helped)
 ## How we handled the data (traps, USD values, one row per transaction)
 ## How we tested honestly (the split, and why)
 ## Features, grouped, each with why it should work

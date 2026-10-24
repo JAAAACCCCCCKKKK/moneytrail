@@ -61,9 +61,11 @@ this list, follow the README and tell the user about the difference.
 
 ## Leakage and rules checks
 
-- Use only the organisers' data. The rules forbid outside transaction or
-  reference data without their approval (public docs and papers are fine). Flag
-  any code that pulls in other data.
+- Outside datasets are allowed (organisers' update on the day) as long as each
+  one is disclosed: why it was used and whether it helped, logged in the
+  "External data" section of `DECISIONS.md`. Flag any code that pulls in outside
+  data that isn't logged there. Still forbidden: external labels for this data,
+  organiser files, generator seeds and test answers.
 - Never use wallet addresses, transaction hashes or exact timestamps as model
   features: the test week has different wallets and new variations.
 - Any feature built from labels (for example "how suspicious are this wallet's

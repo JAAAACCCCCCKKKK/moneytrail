@@ -76,7 +76,7 @@ day, follow what they announce and tell the user what changed.
      sources, method, evaluation and limitations
    - a list of every third-party or pre-existing component (libraries, models,
      services, our pre-hackathon notes and skills) with its source and licence
-   - any external resources or APIs used
+   - any external resources, APIs or datasets used (for each dataset: why, and whether it helped)
    - for AI tools: the model, provider, prompts, settings and any limits on
      reproducing that part
 4. Make sure the repo is public by the deadline, has an approved open-source
