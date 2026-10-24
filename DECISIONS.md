@@ -192,7 +192,9 @@ fall on both sides inflates the score.
   measure the label structure reported above, run the organisers' starter notebook, check
   submission files with our `submission-check` skill, write `src/honest_eval.py`,
   `notebook_features.py`, `src/data.py`, `src/motifs.py`, `src/features.py`, `src/train.py`,
-  `main.py`, `common.py` and `features_starter.py`, and draft this log. Settings: default Claude
+  `main.py`, `common.py`, `features_starter.py`, `graph.py`, `features_shapes.py`,
+  `src/predict_shapes_v2.py`, `tools/track_outputs.py`, `tools/check_zip_limits.py` and the
+  release workflow `.github/workflows/release.yml`, and draft this log. Settings: default Claude
   Code configuration, no custom temperature or sampling parameters. Prompts: the conversation
   was interactive; the reusable prompts are the three skill files in `.claude/skills/`, which
   are kept in this repo.

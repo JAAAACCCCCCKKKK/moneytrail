@@ -1,0 +1,89 @@
+# After every push: pack the committed codebase into a ZIP, check it against the
+# hackathon's code-ZIP rules, and publish it as a GitHub release.
+#
+# The ZIP is built with `git archive`, so it holds exactly the committed files:
+# never data/, outputs/, .venv/ or anything else git ignores. A ZIP that fails the
+# submission-check skill or the organisers' limits gets no release, and the run fails.
+#
+# Releases are tagged build-<short sha>. Pushes to main become the latest release;
+# pushes to any other branch are marked as pre-releases.
+
+name: Release code ZIP
+
+on:
+  push:
+    branches: ["**"]
+  workflow_dispatch:
+
+permissions:
+  contents: write          # create tags and releases
+
+concurrency:
+  group: release-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Every Python file compiles
+        run: python -m compileall -q $(git ls-files '*.py')
+
+      - name: Build the code ZIP
+        id: zip
+        run: |
+          short=$(git rev-parse --short=7 HEAD)
+          name="moneytrail-${short}.zip"
+          git archive --format=zip --prefix=moneytrail/ -o "$name" HEAD
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "tag=build-$short" >> "$GITHUB_OUTPUT"
+          echo "sha256=$(sha256sum "$name" | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - name: Check the ZIP (submission-check skill + organisers' limits)
+        run: |
+          set -o pipefail
+          python .claude/skills/submission-check/scripts/check_submission.py zip "${{ steps.zip.outputs.name }}" | tee check.txt
+          python tools/check_zip_limits.py "${{ steps.zip.outputs.name }}" | tee -a check.txt
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NAME: ${{ steps.zip.outputs.name }}
+          TAG: ${{ steps.zip.outputs.tag }}
+          SHA256: ${{ steps.zip.outputs.sha256 }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          subject=$(git log -1 --format=%s)
+          author=$(git log -1 --format=%an)
+          {
+            echo "Code ZIP for commit ${GITHUB_SHA} on \`${BRANCH}\` by ${author}:"
+            echo
+            echo "> ${subject}"
+            echo
+            echo "Built with \`git archive\`, so it contains only committed files."
+            echo "SHA-256 of \`${NAME}\`: \`${SHA256}\`"
+            echo
+            echo "**Checks**"
+            echo '```'
+            cat check.txt
+            echo '```'
+            echo
+            echo "Before uploading this ZIP with a predictions CSV, confirm in \`SUBMISSIONS.md\` that the CSV came from this commit."
+          } > notes.md
+
+          if [ "$BRANCH" = "main" ]; then kind="--latest"; else kind="--prerelease"; fi
+
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release upload "$TAG" "$NAME" --clobber
+            gh release edit "$TAG" --notes-file notes.md
+          else
+            gh release create "$TAG" "$NAME" --target "$GITHUB_SHA" \
+              --title "$TAG: ${subject}" --notes-file notes.md $kind
+          fi

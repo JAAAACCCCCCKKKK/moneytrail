@@ -1,0 +1,118 @@
+"""Keep OUTPUTS.md up to date: one row per predictions file we have produced.
+
+The CSVs themselves stay out of git (outputs/ is ignored); this ledger is what we
+commit, so anyone can tell which file is which, whether it passed the checker,
+and where it came from. Rows are keyed by the file's SHA-256, so a regenerated
+file gets a new row and the old one stays as history. The Notes column is
+hand-written and is preserved across updates.
+
+Run from the repo root after writing any file into outputs/:
+  python tools/track_outputs.py
+  python tools/track_outputs.py --note predictions_shapes_v2.csv "Run 3 candidate ..."
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import re
+import subprocess
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+import pandas as pd
+
+ROOT = Path(__file__).resolve().parents[1]
+OUTPUTS = ROOT / "outputs"
+LEDGER = ROOT / "OUTPUTS.md"
+CHECKER = ROOT / ".claude/skills/submission-check/scripts/check_submission.py"
+TEST_HASHES = ROOT / "data/test-data/transactions.parquet"
+EXPECTED_ROWS = 40101
+COLUMNS = ["File", "Written (UTC)", "Rows", "Distinct scores", "SHA-256", "Check", "Status", "Notes"]
+
+HEADER = """# Outputs ledger
+
+Every predictions file we have produced, whether or not it was uploaded. The CSVs live
+in `outputs/`, which git ignores; this table is the tracked record. Update it with
+`python tools/track_outputs.py` after writing a file. Rows are keyed by SHA-256, so a
+regenerated file gets a new row. "Check" is the `submission-check` result against all
+40,101 test transactions. Leaderboard scores and the commit behind each upload live in
+`SUBMISSIONS.md`.
+"""
+
+
+def sha256(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for block in iter(lambda: f.read(1 << 20), b""):
+            h.update(block)
+    return h.hexdigest()
+
+
+def check(path: Path) -> str:
+    """Run the team checker; return 'OK', 'OK, n warnings' or 'NOT READY: ...'."""
+    cmd = [sys.executable, str(CHECKER), "csv", str(path)]
+    if TEST_HASHES.exists():
+        cmd += ["--test-file", str(TEST_HASHES), "--expected-rows", str(EXPECTED_ROWS)]
+    out = subprocess.run(cmd, capture_output=True, text=True).stdout
+    problems = [l[len("PROBLEM"):].strip() for l in out.splitlines() if l.startswith("PROBLEM")]
+    warnings = [l for l in out.splitlines() if l.startswith("WARNING")]
+    if problems:
+        return "NOT READY: " + "; ".join(problems)
+    return "OK" + (f", {len(warnings)} warning(s)" if warnings else "")
+
+
+def read_ledger() -> list[dict]:
+    if not LEDGER.exists():
+        return []
+    rows = []
+    for line in LEDGER.read_text(encoding="utf-8").splitlines():
+        if not line.startswith("| ") or line.startswith("| File") or set(line) <= set("|- "):
+            continue
+        cells = [c.strip() for c in re.split(r"(?<!\\)\|", line.strip())[1:-1]]
+        if len(cells) == len(COLUMNS):
+            rows.append(dict(zip(COLUMNS, cells)))
+    return rows
+
+
+def write_ledger(rows: list[dict]) -> None:
+    lines = [HEADER, "| " + " | ".join(COLUMNS) + " |", "|" + "---|" * len(COLUMNS)]
+    for r in sorted(rows, key=lambda r: r["Written (UTC)"]):
+        lines.append("| " + " | ".join(str(r[c]).replace("|", "\\|") for c in COLUMNS) + " |")
+    LEDGER.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--note", nargs=2, metavar=("FILE", "TEXT"), action="append", default=[],
+                        help="set the Notes cell for the current version of FILE")
+    args = parser.parse_args()
+
+    rows = {r["SHA-256"]: r for r in read_ledger()}
+    for r in rows.values():
+        r["Status"] = "gone"          # re-marked below if the file still exists unchanged
+    notes = {name: text for name, text in args.note}
+
+    for path in sorted(OUTPUTS.glob("*.csv")):
+        digest = sha256(path)[:12]
+        row = rows.get(digest)
+        if row is None:
+            scores = pd.read_csv(path, usecols=["score"]).score
+            written = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
+            row = {"File": f"`{path.name}`", "Written (UTC)": written.strftime("%Y-%m-%d %H:%M"),
+                   "Rows": f"{len(scores):,}", "Distinct scores": f"{scores.nunique():,}",
+                   "SHA-256": digest, "Check": check(path), "Notes": ""}
+            rows[digest] = row
+            print(f"new     {path.name}  {digest}  {row['Check']}")
+        row["Status"] = "present"
+        if path.name in notes:
+            row["Notes"] = notes.pop(path.name)
+    for name in notes:
+        print(f"warning: no file outputs/{name} to attach a note to")
+
+    write_ledger(list(rows.values()))
+    print(f"{LEDGER.name}: {len(rows)} row(s)")
+
+
+if __name__ == "__main__":
+    main()
