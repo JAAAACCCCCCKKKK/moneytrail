@@ -211,6 +211,11 @@ fall on both sides inflates the score.
 - **Decision:** every external dataset gets a row in the "External data" section below, kept
   up to date whether or not it helped, so the method write-up can report it honestly.
 
+### ~12:10 — Hard relays: history and whole-scheme tests, nothing separates them (Alim)
+- **Change:** analysis only. Tested per-payment history ideas on the 200 suspicious relay payments against their ~20,000 innocent look-alikes: amount equals the sum of the sender's last 2-12 incoming (same asset); amount is part of a split of an earlier receipt; amount equals an earlier receipt forwarded intact after an hour; days since the sender's previous payment. All at chance (AP 0.010 against 0.010 chance).
+- **Structure found:** the hard cases are 12 schemes (6 aggregate, 6 distributed relays), about 14-16 payments each, spanning the whole week (~133 h) across 10-12 wallets. Each sits in a cohort of 100 same-shaped schemes, 1 laundering and 99 innocent. Comparing each laundering scheme with its 99 siblings on 18 scheme-level properties (wallets, sources, sinks, USD total and spread, gaps, timing, assets, conversions, round amounts, night and weekend share, repeat pairs), every average percentile sits between 0.30 and 0.74, and at most 2 of the 12 are extreme on any one property. This matches Jack's 10:00 finding.
+- **Decision:** stop spending time on the hard relays. They look designed to be indistinguishable from what's observable (as the README warns, some hard cases have labels independent of observable features). The remaining points are in ranking easy and medium cases above innocent look-alikes, so Natasha moves to studying the easy and medium cases we still rank low.
+
 ## External data
 
 Every dataset we use that didn't come from the organisers. Required by the organisers' rules
