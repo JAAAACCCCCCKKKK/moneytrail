@@ -515,6 +515,25 @@ fall on both sides inflates the score.
   reproduces the attempt 16 file byte for byte.
 - **Team rule:** never reset or force-push `main`; undo with `git revert`.
 
+### ~13:30 — Test-week "batch variations", and self-training on the combined model (Alim)
+- **Batch variations** (no test labels: compared clue distributions and what our best model ranks
+  at the top in each week). The schemes look the same in both weeks: our top 1,250 has the same
+  group sizes, spans, gaps and money passed on through the middle (for example 300-second groups:
+  median 7 payments, gap 48s vs 52s, money passed on 0.79 vs 0.83), and compact groups of 4-30
+  payments are as common (15.6% vs 14.6% of payments, median span 8 minutes in both). What shifts:
+  conversions (41% → 51% of payments; the most-shifted clue is a cluster's conversion share, AUC
+  0.62 train vs test), the spread of amounts into and out of wallets (AUC up to 0.60), and amounts
+  about 12% lower. All mild.
+- **Self-training** (`src/predict_union.py --self-train-from <file>`, simulated with each held-out
+  fold as the unseen week, pseudo-labels from the out-of-fold best blend): top 2% suspicious,
+  weight 0.5: 62.5 → 61.8 (0 of 5 folds better); top 1%: 62.5 (3 of 5); top 2% at full weight
+  61.8; top 4% 61.7. Dropped: with a mild shift there is little to adapt to, and the pseudo-labels
+  add noise.
+- **Also:** `violet_clues()` now caches Violet's clue tables in `data/cache`, keyed by a hash of
+  `detector/*.py`; output unchanged (byte-identical).
+- **Next:** drop the 25 conversion clues (13 Jack's, 12 Violet's) from the combined and structure
+  models, the one measurable shift with no label signal.
+
 ## External data
 
 Every dataset we use that didn't come from the organisers. Required by the organisers' rules

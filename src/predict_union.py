@@ -22,8 +22,10 @@ medium in the top 1,250 16% -> 23%.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import sys
 
+import numpy as np
 import pandas as pd
 
 import common
@@ -39,8 +41,14 @@ from predict import features as violet_features        # noqa: E402
 
 
 def violet_clues(week, hashes):
-    """Violet's clues for one week, in the given transaction order."""
-    F = violet_features(load(common.WEEKS[week])[0]).set_index("TRANSACTION_HASH").loc[hashes]
+    """Violet's clues for one week, in the given transaction order. Cached in data/cache under a
+    hash of detector/*.py, so any change to her code rebuilds them."""
+    code = b"".join(f.read_bytes() for f in sorted((common.ROOT / "detector").glob("*.py")))
+    path = common.DATA / "cache" / f"violet_{week}_{hashlib.sha256(code).hexdigest()[:12]}.parquet"
+    if not path.exists():
+        path.parent.mkdir(exist_ok=True)
+        violet_features(load(common.WEEKS[week])[0]).to_parquet(path)
+    F = pd.read_parquet(path).set_index("TRANSACTION_HASH").loc[hashes]
     F.columns = ["v_" + c for c in F.columns]
     return F.reset_index(drop=True).astype(float)
 
@@ -49,6 +57,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--target", choices=["suspicious", "structure"], default="suspicious",
                         help="structure: learn 'part of a planted shape scheme, guilty or not'")
+    parser.add_argument("--self-train-from", default=None,
+                        help="file inside outputs/ whose test ranking gives pseudo-labels for one round of "
+                             "self-training: its top --pseudo-top share as suspicious, bottom half as innocent")
+    parser.add_argument("--pseudo-top", type=float, default=0.02)
+    parser.add_argument("--pseudo-weight", type=float, default=0.5)
     parser.add_argument("--out", default=None, help="file name inside outputs/")
     args = parser.parse_args()
     out_name = args.out or ("predictions_union.csv" if args.target == "suspicious" else "predictions_structure.csv")
@@ -61,6 +74,17 @@ def main():
     if args.target == "structure":
         y = lab.family.isin(SHAPES).to_numpy().astype(int)
         final = make_model("lgbm").fit(U, y).predict_proba(Ut)[:, 1]          # no smoothing, as tested
+    elif args.self_train_from:
+        # one round of self-training on the test week: uses only our own earlier test scores, never test answers
+        prior = test[["TRANSACTION_HASH"]].merge(pd.read_csv(OUTPUTS / args.self_train_from), on="TRANSACTION_HASH").score
+        pct = prior.rank(ascending=False, pct=True).to_numpy()
+        hi, lo = np.flatnonzero(pct <= args.pseudo_top), np.flatnonzero(pct > 0.5)
+        Xs = pd.concat([U, Ut.iloc[hi], Ut.iloc[lo]], ignore_index=True)
+        ys = np.r_[lab.is_suspicious.to_numpy(), np.ones(len(hi)), np.zeros(len(lo))]
+        ws = np.r_[np.ones(len(U)), np.full(len(hi) + len(lo), args.pseudo_weight)]
+        raw = make_model("lgbm").fit(Xs, ys, sample_weight=ws).predict_proba(Ut)[:, 1]
+        test_pay = test[["TRANSACTION_HASH"]].merge(common.payments("test"), on="TRANSACTION_HASH")
+        final = graph.smooth_by_group(raw, test_pay, "test")
     else:
         raw = make_model("lgbm").fit(U, lab.is_suspicious.to_numpy()).predict_proba(Ut)[:, 1]
         test_pay = test[["TRANSACTION_HASH"]].merge(common.payments("test"), on="TRANSACTION_HASH")
