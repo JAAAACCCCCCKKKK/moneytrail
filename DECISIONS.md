@@ -9,11 +9,11 @@ fall on both sides inflates the score.
 
 ## Where we are now (update this after every upload)
 
-- **Best leaderboard score: 66.4** (attempt 12, commit `3a2cb43`): 50/50 blend of the combined
-  model (`python3 -m src.predict_union`, Jack's and Violet's clues in one LightGBM) and Violet's
-  fixed model. Top 1%: precision 93%, recall 30%. **Every part reruns to an identical file**, so
-  this is a safe final entry. Exact commands: `RUN_THIS_VERSION.md` in the attempt 12 ZIP and
-  the "One model on both teams' clues" entry below.
+- **Best leaderboard score: 66.7** (attempt 16): the 66.4 blend plus the structure model at 0.4
+  (`src.blend ... --structure predictions_structure.csv --structure-weight 0.4`). Code: commit
+  `ea1300e`. The ZIP uploaded with attempt 16 was built before the structure code was restored
+  (see ~13:30), so the same CSV must be re-uploaded with the corrected ZIP before the deadline.
+- 66.4 (attempt 12): 50/50 blend of the combined model and Violet's fixed model, fully reproducible.
 - Earlier: 30% run 3 + 70% Violet 65.6 (Violet's old file can't be recreated, so not a safe final
   entry); 50/50 65.5; Violet v2 alone 65.1; run 3 62.0; Jack's candidate B 61.8 (dropped).
 - **Main pipeline now:** `src/predict_union.py` (combined model) + `detector/` (Violet's model)
@@ -502,6 +502,18 @@ fall on both sides inflates the score.
   structure: 30% 61.2, 40% 61.0, 50% 60.6, 60% 60.2, 70% 59.7.
 - **Decision:** next upload: the 50/50 blend plus the structure model at 0.4, so the leaderboard
   measures the structure gain alone. Then Violet's share 30% as a separate probe.
+- **Leaderboard:** attempt 16, **66.7** (+0.3 on 66.4). Much less than the honest test's +1.9: the
+  structure model's picture of a compact planted scheme carries over to the test week only partly.
+
+### ~13:30 — Jack's reset of `main` removed three commits; two restored (Alim)
+- Jack reset GitHub's `main` to `58696ff` (12:57), which removed his `a336f9d` (shape signals),
+  Alim's `89a970c` (diary) and `29fe54f` (structure-model code). Alim's next `git pull --rebase`
+  then dropped them locally too, so the attempt 16 ZIP (built from `3fcf1fd`) lacks the structure
+  code, although its predictions were made with it.
+- Restored `89a970c` and `29fe54f` by cherry-pick on top (no history rewritten); Jack's `a336f9d`
+  left out, as he removed it on purpose (still recoverable by its hash). Verified: the blend step
+  reproduces the attempt 16 file byte for byte.
+- **Team rule:** never reset or force-push `main`; undo with `git revert`.
 
 ## External data
 
