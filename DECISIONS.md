@@ -728,6 +728,30 @@ fall on both sides inflates the score.
   laundering, and as the first thing to build with more time: a better reconstruction of each relay
   wallet's episodes (the membership model is the bottleneck).
 
+### ~15:30 — Modelling the generator: templates from the true schemes, groups under the grammar (Jack, with Claude Code)
+- **Change:** `src/predict_generator.py`. (1) Grammar grouping: the learned linker's links are merged in
+  confidence order, refusing any merge that breaks the grammar read off the training schemes (at most
+  16 payments, at most 10 hours), at three confidence levels (0.3, 0.5, 0.7) = three hypotheses per
+  payment. (2) Template model: one row per scheme with the generator's parameters (`src.motifs.describe`,
+  asset and conversion columns left out), a small LightGBM fitted on the 272 **true** training schemes
+  (`scenario_id` only to form them) plus 502 rebuilt training groups that are at least 80% one scheme.
+  (3) Score: P(scheme) x the mean template posterior over the three hypotheses, rank-blended 50/50 with
+  the combined model, as in the 67.1 recipe (mode G); G4 averages the template with the recipe's learned
+  second model.
+- **Why:** the labels are the generator's intent, so the right detector is the generator's own likelihood
+  ratio on whole schemes; our fixed-window groups cut slow schemes apart (13:45 ceiling analysis).
+- **Honest test** (three fold seeds, pooled / fold mean, folds better than the 67.1 recipe): recipe
+  62.3 / 63.0; **G 63.1 / 63.9, 12 of 15** (seed 7: 64.5 / 65.1); G4 63.1 / 63.8, 12 of 15; G3 (thirds)
+  62.8 / 63.7. Medium median rank 2,650 -> about 2,100, medium in the top 2,500 0.48 -> 0.60; easy in the
+  top 1,250 0.97 -> 0.96. The template posterior alone is useless (3.9): it only ranks schemes, the
+  scheme model has to find them. Grammar grouping with a 2-D speed table instead of the template model:
+  62.5 / 63.3, 9 of 15, so the template parameters matter, not just the grouping.
+- **Test predictions:** `python -m src.predict_generator --mode G` -> `outputs/predictions_generator_G.csv`;
+  blended with Violet's fixed model like the 67.1 entry -> `predictions_blend_generator_G_violet.csv`;
+  same for G4. Both pass the checker.
+- **Leaderboard:** not uploaded yet. Largest honest-test gain of the afternoon, still under the
+  1.5-point rule, so the leaderboard decides.
+
 ## External data
 
 Every dataset we use that didn't come from the organisers. Required by the organisers' rules
