@@ -224,6 +224,11 @@ Not counted as external data used in our entry: the public datasets we practised
 the event (IBM AML transactions on Kaggle, a slice of the AWS public XRPL data). They were for
 learning only and are not used by any of our code; see `prep/RESEARCH.md`.
 
+### ~11:55 — Natasha's wallet clues, batch 1 (Natasha, tested by Alim)
+- **Change:** `src/features_wallet.py`: sender and receiver age in the week, minutes since the sender last received money (strictly earlier), and this payment ÷ that last receipt. Tested through a temporary adapter because the file's column names (`SENDER`, `RECEIVER`, `DATETIME`, `USD_VALUE`) don't match the payments table (`FROM_ADDRESS`, `TO_ADDRESS`, `TIMESTAMP` in seconds, `VALUE`).
+- **Honest test** (`main.py` folds, raw LightGBM, no smoothing): starter + shapes 54.8 ± 4.1 → with wallet clues 54.9 ± 4.6, better in 3 of 5 folds.
+- **Decision:** not added. The pipeline already has the same ideas (`src_seconds_since_funded`, wallet week profiles, first-time pair). Natasha moves to clues the pipeline doesn't have: how a payment relates to its wallet's own earlier history, for the hard relays.
+
 ## AI use
 
 - **Claude Code (Claude Opus 5 and Claude Opus 5.5, Anthropic).** Used to inspect the dataset,
