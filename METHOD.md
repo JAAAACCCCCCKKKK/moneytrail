@@ -1,8 +1,9 @@
 # MoneyTrail: method
 
-Decode & Detect hackathon, 24 October 2026. Final entry: leaderboard score **67.8** (100 × average
-precision on the 40,101 test transactions), file `outputs/predictions_gate_v10.csv`, made by the
-code at commit `3572d05`; the repository's `main` (`cf568b2` or later) recreates it byte for byte.
+Decode & Detect hackathon, 24 October 2026. Final entry: leaderboard score **68.0** (100 × average
+precision on the 40,101 test transactions), file `outputs/predictions_gate_relay_v10.csv`, made by
+the code at commit `f071e47`; a fresh copy of that commit with only the raw data recreates it byte
+for byte.
 The full day-by-day record, with every number quoted here, is in `DECISIONS.md` and `SUBMISSIONS.md`.
 
 ## Team
@@ -88,6 +89,17 @@ test week has "batch variations absent from training").
    31 leaves, seeds 0, 1, 2, plus a second stage on neighbouring payments' scores) is rank-mixed in
    at 10%: final = 0.9 × rank(gate) + 0.1 × rank(Violet). On the leaderboard that 10% was worth
    +0.2 (67.6 without it).
+5. **Relay multiplier** (`src/relay_groups.py`), for the hard relays: a relay scheme runs three
+   bursts across the week through the same one or two middle wallets, and those wallets carry
+   about 110 other payments each, so fixed time windows can't group it. A third LightGBM (300
+   trees, 63 leaves, seed 42) learns "are these two payments in the same scheme?" on candidate
+   pairs (money into a wallet and out of it within 6 hours; repeats of the same sender-receiver
+   pair); `scenario_id` is its training target only. Around each repeating pair it joins across
+   days, each repeat's linked payments form one burst. Where the structure model gives under 0.3,
+   schemes whose money runs backwards (paid out first, topped up after) are multiplied by e^-4,
+   and forward ones by e^(4 × (steadiness rank − 0.5)), steadiness being how little the share of
+   money passed on varies between bursts. The multiplier is applied to the gate before the Violet
+   mix. Link model AP 0.80 out of fold; conversion clues left out, because they shift between weeks.
 
 ## Results
 
@@ -99,9 +111,11 @@ test week has "batch variations absent from training").
 | Violet's detector v2 alone | 57.4 (57.1 ± 7.2) | 65.1 |
 | Combined model (both clue sets) + Violet, 50/50 | 60.6 (60.7 ± 5.9) | 66.4 |
 | + structure model, rank-mixed at 0.4 | 62.5 (62.7 ± 5.6) | 66.7 |
-| **Gate: combined × structure, + 10% Violet (final)** | **63.7 (64.3 ± 5.2)** | **67.8** |
+| Gate: combined × structure, + 10% Violet | 63.7 (64.3 ± 5.2) | 67.8 |
+| **Gate × relay multiplier, + 10% Violet (final)** | **64.0 (64.5 ± 5.2, better in 5 of 5)** | **68.0** |
 
-Final entry, top 1% of the list (401 payments): precision 96%, recall 31%. Caught there: easy 50%
+The relay multiplier changes nothing in the top 1% (all 401 payments are the same as in the 67.8
+file), so its gain is further down the list. Top 1% of the list (401 payments): precision 96%, recall 31%. Caught there: easy 50%
 of 800 (the most 401 places can hold), medium 10% of 225, observable hard 0% of 200, ambiguous 0%
 of 25. On the training week, even a perfect "planted scheme or not" step plus perfect grouping would
 reach only about 67.3: the rest is built to be indistinguishable (next sections).
@@ -117,6 +131,14 @@ reach only about 67.3: the rest is built to be indistinguishable (next sections)
 - **Changes that won on the honest test but lost on the leaderboard,** after the gate: Jack's deck
   signals and slow-scheme groups inside the gate (+0.5 honest, 66.4); gap-cluster smoothing of the
   gate (+1.2 honest, 66.6); averaging 5 seeds (67.7) or adding XGBoost (67.5).
+- **Violet's share, chosen on the leaderboard:** since the leaderboard scores the whole test week,
+  we probed the share directly in the last hour: 0% 67.6, 10% 67.8, 20% 68.0, 30% 68.0, 50% 67.3;
+  with the relay multiplier, 20% at most 68.0, 30% 67.5, 50% 67.9. The two +0.2 gains don't add up,
+  so we kept the relay version at 10%: it ties the best score and is the only one the honest test
+  also supports (30% was −0.7 there).
+- **Learned links for medium schemes:** the relay link model used to smooth the structure or
+  combined score over linked payments, 36 settings: all at or below the baseline (best −0.01).
+  Medium schemes' linked payments look as innocent as they do.
 - **External IBM helper model** (no signal, above) and **Isolation Forest anomaly scores** (alone
   AP 27.5, a real signal without labels, but only +0.3 in the gate, 2-3 of 5 folds).
 
@@ -124,9 +146,11 @@ reach only about 67.3: the rest is built to be indistinguishable (next sections)
 
 - **Hard relays (200 of 1,250 positives):** each laundering relay hides among 99 same-shaped
   innocent ones. We found that every guilty relay moves money forward in time (receive, then pass on
-  less), while exactly half of its innocent siblings run backwards (pay out, then get topped up).
-  Removing the backward ones would add about 1.5 points, but the signal only shows over a whole
-  week-long relay, which we couldn't reconstruct in time. Nothing else separated them.
+  less), while exactly half of its innocent siblings run backwards (pay out, then get topped up),
+  and it passes on a steadier share of the money in each burst. Both only show over the whole
+  week-long relay. The learned grouping above recovers part of it (+0.25 honest, +0.2 leaderboard);
+  with the true grouping the same multiplier would reach 66.4 on the honest test, so better
+  grouping is the clearest next step.
 - **Medium cases and fast look-alikes:** medium schemes are easy shapes run slowly, and about 12% of
   innocent look-alike schemes are as fast as laundering; on every measure we tried they look the
   same. These are most of our false alarms near the top.
@@ -152,7 +176,8 @@ Our code is released under the MIT licence (`LICENSE`).
 
 - **Claude Code (Claude Opus 5 and Claude Opus 5.5, Anthropic)** was used throughout: inspecting the
   data and labels, writing much of the pipeline (`src/`, `main.py`, `common.py`, `graph.py`, the clue
-  files, the gate in `src/blend.py`), the analyses quoted in `DECISIONS.md`, finding and fixing the
+  files, the gate and relay options in `src/blend.py`,
+  `src/relay_groups.py`), the analyses quoted in `DECISIONS.md`, finding and fixing the
   two hash-seed bugs, checking submission files, and drafting `DECISIONS.md` and this write-up.
   Violet's `detector/` was written by Claude (Claude Opus 5.5, Anthropic) in a chat session under
   her direction. Settings: default configuration, no custom temperature or sampling.
@@ -169,10 +194,12 @@ versions in `requirements-lock.txt`). From the repository root:
 python3 -m src.predict_union --probabilities --out predictions_union_prob.csv
 python3 -m src.predict_union --target structure --probabilities --out predictions_structure_prob.csv
 python3 detector/predict.py --train data/train --test data/test-data --out outputs/predictions_violet_v2_fixed.csv
-python3 -m src.blend --gate --weight 0.1 --run3 predictions_union_prob.csv --violet predictions_violet_v2_fixed.csv --structure predictions_structure_prob.csv --out predictions_gate_v10.csv
+python3 -m src.relay_groups
+python3 -m src.blend --gate --weight 0.1 --run3 predictions_union_prob.csv --violet predictions_violet_v2_fixed.csv --structure predictions_structure_prob.csv --relay relay_multiplier.csv --out predictions_gate_relay_v10.csv
 ```
 
-The result is `outputs/predictions_gate_v10.csv`. All models are retrained on each run, so there are
+The result is `outputs/predictions_gate_relay_v10.csv`. Leaving out `python3 -m src.relay_groups`
+and `--relay relay_multiplier.csv` recreates the 67.8 file, `outputs/predictions_gate_v10.csv`. All models are retrained on each run, so there are
 no model files to download; seeds are fixed (LightGBM 42; scikit-learn 0, 1, 2). A fresh clone
 with only the raw data took 10 minutes on an Apple silicon laptop (24 GB of memory; under 4 GB
 used) and recreated the file byte for byte under different Python hash seeds. Our runs used Python

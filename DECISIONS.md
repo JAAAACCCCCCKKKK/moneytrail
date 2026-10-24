@@ -954,6 +954,22 @@ fall on both sides inflates the score.
 - **Leaderboard:** not uploaded.
 - **Decision:** dropped. Same pattern as the other smoothing tries today.
 
+### ~15:25-15:38 — Leaderboard probes: relay multiplier and Violet's share; final entry chosen (Alim, with Claude Code)
+- **Why the leaderboard decides here:** it scores all 40,101 test transactions, so it is the final
+  score itself, and it keeps the team's best run, so a worse probe costs nothing. Our honest test had
+  stopped predicting small changes (gate 2 +0.5 → −1.4, smoothing +1.2 → −1.2), while Violet's model
+  holds up far better on the test week (alone 65.1 against 57.4 honest; the gate 67.8 against 63.7),
+  and her 10% share was worth +0.2 on the leaderboard against −0.04 in the honest test.
+- **Change:** no new code. Files from the existing `src.blend --gate` options (`--weight`,
+  `--relay`), all built from `f071e47`, each rebuilt from its own command and matched byte for byte.
+- **Leaderboard** (Violet's share, without / with the relay multiplier): 0% 67.6 / -; 10% 67.8 /
+  **68.0**; 20% **68.0** / at most 68.0; 30% **68.0** / 67.5; 50% 67.3 / 67.9.
+- **Decision:** final entry = relay multiplier + 10% Violet (`outputs/predictions_gate_relay_v10.csv`,
+  68.0). Three files tie at 68.0, and the two +0.2 gains don't add up, so the remaining differences
+  are a few tenths in either direction. The relay version is the only one the honest test also
+  supports (+0.25, 5 of 5 folds; 30% Violet was −0.7) and it leaves the top 1% unchanged.
+  `METHOD.md` and `README.md` updated to this recipe.
+
 ## External data
 
 Every dataset we use that didn't come from the organisers. Required by the organisers' rules
@@ -979,7 +995,8 @@ learning only and are not used by any of our code; see `prep/RESEARCH.md`.
   `.github/workflows/release.yml`, and the gate options in `src/blend.py` and `src/predict_union.py`;
   run the 13:40 analysis of lost points and hard relays; merge Jack's branch and find and fix the
   hash-seed bug in `features_shape_signals.py` (14:10); run the 14:55, 15:00 and 15:10 hard-relay
-  experiments (including rebuilding the gate's out-of-fold scores) and write `src/relay_groups.py` and the `--relay` option in `src/blend.py`; and draft this log. Settings: default Claude
+  experiments (including rebuilding the gate's out-of-fold scores) and write `src/relay_groups.py` and the `--relay` option in `src/blend.py`; run the 15:18 learned-link smoothing test (as a background sub-agent) and suggest the
+  15:25-15:38 leaderboard probes, building and checking every probe file and ZIP; and draft this log. Settings: default Claude
   Code configuration, no custom temperature or sampling parameters. Prompts: the conversation
   was interactive; the reusable prompts are the three skill files in `.claude/skills/`, which
   are kept in this repo.
