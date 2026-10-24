@@ -12,7 +12,7 @@ fall on both sides inflates the score.
 - **Best leaderboard score: 66.7** (attempt 16): the 66.4 blend plus the structure model at 0.4
   (`src.blend ... --structure predictions_structure.csv --structure-weight 0.4`). Code: commit
   `ea1300e`. The ZIP uploaded with attempt 16 was built before the structure code was restored
-  (see ~13:30), so the same CSV must be re-uploaded with the corrected ZIP before the deadline.
+  (see ~13:20), so the same CSV must be re-uploaded with the corrected ZIP before the deadline.
 - 66.4 (attempt 12): 50/50 blend of the combined model and Violet's fixed model, fully reproducible.
 - Earlier: 30% run 3 + 70% Violet 65.6 (Violet's old file can't be recreated, so not a safe final
   entry); 50/50 65.5; Violet v2 alone 65.1; run 3 62.0; Jack's candidate B 61.8 (dropped).
@@ -505,7 +505,7 @@ fall on both sides inflates the score.
 - **Leaderboard:** attempt 16, **66.7** (+0.3 on 66.4). Much less than the honest test's +1.9: the
   structure model's picture of a compact planted scheme carries over to the test week only partly.
 
-### ~13:30 — Jack's reset of `main` removed three commits; two restored (Alim)
+### ~13:20 — Jack's reset of `main` removed three commits; two restored (Alim)
 - Jack reset GitHub's `main` to `58696ff` (12:57), which removed his `a336f9d` (shape signals),
   Alim's `89a970c` (diary) and `29fe54f` (structure-model code). Alim's next `git pull --rebase`
   then dropped them locally too, so the attempt 16 ZIP (built from `3fcf1fd`) lacks the structure
