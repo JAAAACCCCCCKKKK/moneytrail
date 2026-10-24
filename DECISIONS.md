@@ -458,7 +458,9 @@ fall on both sides inflates the score.
 - **Check:** Violet's clues built under two different Python hash seeds: old code, 4 clues differ
   (`cl120_cons` to `cl900_cons`, on 122 to 6,803 payments); fixed code, all 225 clues identical.
 - **Consequence:** the fixed model gives a slightly different test file from the one that scored
-  65.1, so its score has to be confirmed by a new upload.
+  65.1 (rank correlation 0.958, 371 of the top 401 shared), so its score has to be confirmed by a
+  new upload. End-to-end check: two full runs of the fixed model under different hash seeds give
+  byte-identical files (`outputs/predictions_violet_v2_fixed.csv`).
 
 ### ~12:40 — One model on both teams' clues (Alim)
 - **Change:** `src/predict_union.py`: one LightGBM (run 3's settings) on Jack's 187 run 3 clues
@@ -471,7 +473,10 @@ fall on both sides inflates the score.
   **with group smoothing 60.0** (folds 60.4 ± 5.3), better than the best upload in 4 of 5 folds.
   **Blended 50/50 with Violet's model: 60.6** (folds 60.7 ± 5.9 [56.4, 66.8, 55.9, 68.9, 55.4]),
   better in 5 of 5 folds; easy payments in the top 1,250 95%. Thirds with run 3 as well: 60.0.
-- **Decision:** next upload: 50/50 blend of the combined model and Violet's fixed model.
+- **Reproducible:** two runs under different hash seeds give byte-identical files.
+- **Decision:** next upload: 50/50 blend of the combined model and Violet's fixed model
+  (`outputs/predictions_blend_union_violet.csv`; rank correlation 0.94 with the 65.6 upload, 376
+  of the top 401 shared). Every part of it reruns to an identical file.
 
 ## External data
 
