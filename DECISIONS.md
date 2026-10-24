@@ -765,6 +765,26 @@ fall on both sides inflates the score.
   its commands still recreate it byte for byte on the merged `main`. `gate2_v0` not uploaded.
 
 
+### ~14:25 — Gap-cluster smoothing after the gate (Violet, with Claude)
+- **Change:** `src/blend.py --smooth W` blends the gate's log score with the mean log score of the
+  payment's gap clusters (shared wallet within 2, 5, 10 and 15 minutes, `detector/clusters.py`),
+  averaged over the four scales. Default 0 leaves the 67.8 recipe unchanged (checked byte for byte).
+- **Why:** labels are pure per scheme, so cluster-mates of a guilty-looking payment are likely guilty.
+- **Honest test:** on Violet's clues only (sklearn models rebuilt the gate's way, not the team's
+  combined/structure models): gate 62.2 → **64.1** at W=0.2, 5 of 5 folds, medium 9.4 → 14.1.
+  Smoothing ranks instead of log probabilities hurt (60.2).
+- **Leaderboard:** `outputs/predictions_gate_v10_smooth20.csv` scored **66.4** (−1.4 on 67.8;
+  top 1% precision 92%, recall 30%, medium 0%).
+- **Decision:** dropped. Likely reason: the combined model is already group-smoothed, so a second
+  smoothing over-smooths, and Violet's test didn't use the team's models. Lesson (same as gate 2):
+  an honest-test gain on a different model doesn't transfer; test on the combined model's
+  out-of-fold scores before uploading.
+- **Also tested today and dropped (Violet's clues, gate as baseline 62.2):** a cascade re-ranking
+  ranks 400-6,000 with a second model (best 61.8); multi-day relay clues (58.3 vs 59.1, stage 1);
+  forward/backward flow clues (61.5); a model of forward vs backward relays (AUC 0.78 for the
+  direction, 0.68 guilty vs innocent relay) as a gate factor (62.16, no change); "guilty given
+  planted" third factor (60.8); structure power 0.5-3 (61.7-62.3, flat).
+
 ## External data
 
 Every dataset we use that didn't come from the organisers. Required by the organisers' rules
