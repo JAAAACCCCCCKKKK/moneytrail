@@ -119,6 +119,13 @@ Times are London time (BST, UTC+1) and approximate for the first three entries.
 - **Leaderboard:** not uploaded yet.
 - **Decision:** kept. Hard recall in the top 1% is still 0.00, as expected.
 
+### ~11:00 — Label study: easy cases first, hard relays look ordinary payment by payment
+- **Change:** analysis only, no model change.
+- **Findings:** 98% of easy and medium suspicious payments are the first payment between that sender and receiver in the week, against 54% of innocent payments (innocent activity has recurring relationships). Easy cases forward fast (median receiver forward time about 20 minutes against the 60-minute cap) and come in short bursts. The hard cases are 102 suspicious `aggregate_relay` among 10,098 innocent and 98 suspicious `distributed_relay` among 9,702 innocent. Every per-payment clue tested separates them weakly (best about 0.18 on a 0-to-1 scale): wallet age, activity, counterparties, amounts, forwarding within 1, 6, 24 or 72 hours, repeat pairings. Every suspicious relay has a `cohort_id`.
+- **Why it matters:** easy is 64% of the suspicious transactions and the baseline caught only 30% of them in the top 1%, so the quickest points are in easy and medium. Hard relays need group and neighbour clues, not single-payment ones.
+- **Honest test:** not measured (analysis only).
+- **Decision:** priority order for the team: easy and medium first (first-time pairing, tempo, bursts, shapes); hard cases from 14:30 with group-level and guilt-by-association clues.
+
 ## AI use
 
 - Claude Code (Claude Opus 5.5, Anthropic): ran the starter notebook, checked the submission file with our `submission-check` skill, and wrote these log entries, and helped write `main.py`, `common.py` and `features_starter.py`. Prompts: the skill files in `.claude/skills/`.
