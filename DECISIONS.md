@@ -940,6 +940,20 @@ fall on both sides inflates the score.
   5 folds and it changes nothing in the top 1%, so the risk is small. The 67.8 file stays the final
   entry unless this beats it.
 
+### ~15:18 — Learned links for medium schemes: smoothing over linked payments (Alim, with Claude Code)
+- **Change:** experiment only (scratchpad scripts). The relay link model (`src/relay_groups.py`,
+  out of fold on the gate's folds, link AP 0.80) reused for every scheme: each payment's structure
+  probability, combined probability or both mixed with the link-weighted mean over its linked
+  payments (one hop only; full chaining snowballs into one huge group). Mix 0.2 / 0.4 / 0.6, link
+  cutoff 0.3 / 0.5, both link kinds or hand-on links only: 36 variants.
+- **Why:** medium schemes are slow, so fixed time windows split them; learned links might hold them
+  together and lift the "planted scheme or not" step, where the largest reachable points are.
+- **Honest test** (gate + 10% Violet, reproducing 63.72): every variant at or below the baseline;
+  best −0.01 (structure, cutoff 0.5, mix 0.2; 2 of 5 folds), worst −1.35. Medium payments' median
+  rank 1,983 before, 1,941-2,145 after: their linked neighbours look as innocent as they do.
+- **Leaderboard:** not uploaded.
+- **Decision:** dropped. Same pattern as the other smoothing tries today.
+
 ## External data
 
 Every dataset we use that didn't come from the organisers. Required by the organisers' rules
