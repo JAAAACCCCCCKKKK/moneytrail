@@ -677,7 +677,13 @@ fall on both sides inflates the score.
   differently. Blends with that rebuild (`src.blend --run3 predictions_blend_two_q_violet.csv --violet
   predictions_gnn.csv --weight 0.25 / 0.5`): `predictions_blend_recipe_gnn25.csv` (top-402 overlap 376)
   and `predictions_blend_recipe_gnn5.csv` (341).
-- **Honest test:** running (`python -m src.predict_gnn --cv`).
+- **Honest test** (`python -m src.predict_gnn --cv`, three fold seeds, pooled / fold mean, folds better
+  than the 67.1 recipe): recipe 62.3 / 63.0; GNN alone 57.3 / 58.5, 1 of 15; **recipe 75% + GNN 25%
+  62.7 / 63.5, 10 of 15**, top-400 precision up on every seed (0.835 → 0.843, 0.833 → 0.843,
+  0.810 → 0.820); recipe 50% + GNN 50% 62.3 / 63.1, 6 of 15.
+- **Decision:** the GNN alone is weaker than our trees, as the AMLworld paper found for trees with graph
+  clues. A 25% share is a small, consistent gain, below our 1.5-point rule; one leaderboard probe:
+  `outputs/predictions_blend_recipe_gnn25.csv`. The 50% blend is not worth an upload.
 
 ## External data
 
