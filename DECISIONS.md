@@ -9,8 +9,10 @@ fall on both sides inflates the score.
 
 ## Where we are now (update this after every upload)
 
-- **Best leaderboard score: 62.0** (run 3, commit `6641b38`). Top 1%: precision 91%, recall 29%.
-  Run 4 (Jack's 20-minute window + medium weighting) scored 60.8, so it's dropped.
+- **Best leaderboard score: 65.1** (run 7, Violet's detector v2 alone, commit `69ff81b`,
+  `outputs/predictions_violet_v2.csv`). Run 3 (Jack's shape model) 62.0; run 4 60.8, dropped.
+- **Run 8 candidate: 50/50 rank blend of run 3 and Violet v2** (`python3 -m src.blend`). Honest
+  test 58.6 against 57.4 (Violet) and 56.8 (run 3), better than either model in 4 of 5 folds.
 - **Main pipeline: Jack's `src/`** (`python3 -m src.train`). Honest test 54.9 (folds 57.3 ± 9.9).
   `main.py` is kept only for comparison.
 - **New clues go into the `src/` pipeline.** After changing features, delete `data/cache/`
@@ -249,12 +251,12 @@ fall on both sides inflates the score.
 - **Leaderboard:** run 4 ("TEST 3" on the site), uploaded by Jack around 11:30 UTC from commit `a265fa9`. Score **60.8** (run 3 was 62.0, so −1.2). Top 1%: precision 89%, recall 29%. Caught in the top 1%: easy 40%, medium 0% (run 3: 10%), hard 0%.
 - **Decision:** dropped. A gain of about a point on the honest test didn't carry to the test week, and the medium weighting made medium worse in the top 1% (10% → 0%). Lesson: honest-test gains under about 1.5 points are inside the noise; only upload changes with a bigger, consistent gain. Run 3 stays our best.
 
-### ~12:10 — Hard relays: history and whole-scheme tests, nothing separates them (Alim)
+### ~11:45 — Hard relays: history and whole-scheme tests, nothing separates them (Alim)
 - **Change:** analysis only. Tested per-payment history ideas on the 200 suspicious relay payments against their ~20,000 innocent look-alikes: amount equals the sum of the sender's last 2-12 incoming (same asset); amount is part of a split of an earlier receipt; amount equals an earlier receipt forwarded intact after an hour; days since the sender's previous payment. All at chance (AP 0.010 against 0.010 chance).
 - **Structure found:** the hard cases are 12 schemes (6 aggregate, 6 distributed relays), about 14-16 payments each, spanning the whole week (~133 h) across 10-12 wallets. Each sits in a cohort of 100 same-shaped schemes, 1 laundering and 99 innocent. Comparing each laundering scheme with its 99 siblings on 18 scheme-level properties (wallets, sources, sinks, USD total and spread, gaps, timing, assets, conversions, round amounts, night and weekend share, repeat pairs), every average percentile sits between 0.30 and 0.74, and at most 2 of the 12 are extreme on any one property. This matches Jack's 10:00 finding.
 - **Decision:** stop spending time on the hard relays. They look designed to be indistinguishable from what's observable (as the README warns, some hard cases have labels independent of observable features). The remaining points are in ranking easy and medium cases above innocent look-alikes, so Natasha moves to studying the easy and medium cases we still rank low.
 
-### ~12:25 — Longer motif windows (30 min, 1 h, 2 h) on the `src.train` model (Alim)
+### ~11:50 — Longer motif windows (30 min, 1 h, 2 h) on the `src.train` model (Alim)
 - **Change:** experiment only (script not in the repo). Added Jack's motif features at 1,800s, 3,600s and 7,200s on top of run 2's 135 clues; also a variant where only quiet wallets (at most 15 payments in the week) can link payments.
 - **Why:** medium schemes are slow (median gap 1,066s over 110 minutes), so the 2-10 minute motifs never see their shape.
 - **Grouping:** plain long windows keep every medium scheme together but merge into huge groups (largest 9,184 payments at 30 minutes, 39,465 at 2 hours). The quiet-wallet variant links almost nothing (medium scheme wallets are busier than 15 payments a week).
@@ -262,7 +264,7 @@ fall on both sides inflates the score.
 - **Leaderboard:** not uploaded.
 - **Decision:** passes our rule (more than a point, 4 of 5 folds) on its own. Worth Jack trying the plain 30-minute, 1-hour and 2-hour motif features on top of his run 4 candidate under his folds; it won't solve the medium cases by itself.
 
-### ~12:50 — Where the reachable points are, and not learning from impossible labels (Alim)
+### ~12:00 — Where the reachable points are, and not learning from impossible labels (Alim)
 - **Change:** analysis, then one experiment (`src.train` folds, same as run 2's 54.9).
 - **Ceiling checks (training labels used only to measure the upper bound):** scoring each payment by its true scheme's best score gives 58.7 (+3.8) and leaves medium at 11%. A model trained only on medium schemes against their innocent twins, with perfect whole-scheme clues (shape, speed, amounts), scores AP 0.14-0.15 against 0.17 chance: medium cases look built to resemble their look-alikes, like the hard ones. Pushing each kind of false alarm to the bottom would add: background +2.1, relay look-alikes +8.5 (218 of them in our top 1,250), shape look-alikes +9.8 (206, mostly the fast honest schemes Jack showed can't be told apart by tempo).
 - **Idea:** the 200 hard relay positives and 25 ambiguous ones can't be separated, so learning from them only teaches "relay-like is a bit suspicious", which lifts innocent relays into our top ranks.
@@ -316,19 +318,6 @@ fall on both sides inflates the score.
   shape and tempo still look like honest look-alikes; the gain is inside the noise. Kept as an
   option for a later combination.
 
-## External data
-
-Every dataset we use that didn't come from the organisers. Required by the organisers' rules
-update at 11:50: say why we used it and whether it worked.
-
-| Dataset | Source | Why we used it | How we used it | Did it help? (honest test before → after) | Kept? |
-|---|---|---|---|---|---|
-| None yet | | | | | |
-
-Not counted as external data used in our entry: the public datasets we practised on before
-the event (IBM AML transactions on Kaggle, a slice of the AWS public XRPL data). They were for
-learning only and are not used by any of our code; see `prep/RESEARCH.md`.
-
 ### ~11:55 — Natasha's wallet clues, batch 1 (Natasha, tested by Alim)
 - **Change:** `src/features_wallet.py`: sender and receiver age in the week, minutes since the sender last received money (strictly earlier), and this payment ÷ that last receipt. Tested through a temporary adapter because the file's column names (`SENDER`, `RECEIVER`, `DATETIME`, `USD_VALUE`) don't match the payments table (`FROM_ADDRESS`, `TO_ADDRESS`, `TIMESTAMP` in seconds, `VALUE`).
 - **Honest test** (`main.py` folds, raw LightGBM, no smoothing): starter + shapes 54.8 ± 4.1 → with wallet clues 54.9 ± 4.6, better in 3 of 5 folds.
@@ -351,6 +340,71 @@ learning only and are not used by any of our code; see `prep/RESEARCH.md`.
   has no self-payments, destination tags, memos or partial payments, and no wallet is opened
   during the week (holdings exist before the window), so "who opened this wallet" can't be
   computed.
+
+### ~12:15 — Why the top teams score higher: easy schemes against fast innocent look-alikes (Alim)
+- **Change:** analysis only. Rebuilt run 3's pipeline (`src.predict_shapes_v2` defaults) on
+  `main.py`'s folds to get its honest-test scores: **56.8** overall, folds 57.1 ± 5.9
+  [48.4, 62.7, 52.6, 63.9, 57.7] (Jack measured 57.6 ± 6.1).
+- **Reading the leaderboard panel:** it only shows the top 1%, which is 401 slots, so 50% of the
+  800 easy cases is the most that can fit. The 71.1 and 67.4 teams show easy 50% / 40% and
+  medium 10%, much like us (our precision there is 91% against their 93-94%). The 9-point gap
+  is mostly further down the list, in how the other ~400 easy and the medium cases are ordered.
+- **Where run 3 loses points (honest test):** the top 401 holds 319 easy, 17 medium and 65
+  innocent shape look-alikes. The top 1,250 holds 709 of the 800 easy, 28 medium, and 513
+  innocent payments (265 shape look-alikes, 143 relay look-alikes, 105 background). Ceilings:
+  every easy payment at the top +14.7; easy and medium at the top +27.9; shape look-alikes
+  pushed to the bottom +10.3; relay look-alikes +7.2; background +2.0; perfect scheme grouping
+  (each payment gets its scheme's mean score) +3.9.
+- **Easy families we rank lowest:** fan-out (0% in the top 401, median rank 917), random (2%),
+  bipartite (15%), fan-in (27%), stack (36%). Chain, cycle and fan-out-in rank well. Twelve
+  small easy schemes (4-9 payments) are mostly missed.
+- **What separates easy schemes from innocent look-alikes** (scheme level, 105 easy against 140
+  look-alike schemes): speed (median gap 60s against 572s, about 0.92 AUC), which our clues
+  already use. But 28 look-alike schemes are as fast as the easy ones, and they are the false
+  alarms at our top (look-alikes in our top 1,250 take a median 12 minutes, the rest 78).
+  Against those fast ones nothing measured separates well: size, amounts, amount spread, time
+  of day, time order, or the wallets' activity outside the scheme (every scheme wallet is an
+  ordinary busy wallet with 100-150 other payments that week). The best is that laundering
+  passes on more of the money through the middle wallets (95% against 90%, AUC 0.69), which
+  our pass-through clues already measure.
+- **Not learning from hard positives, on this pipeline:** 56.8 → 55.3 (folds 57.1 → 56.6,
+  better in 3 of 5). The +1.7 on `src.train` doesn't carry over, so it's dropped, and the plan
+  to stack the three small `src.train` gains is weaker than it looked.
+- **Decision:** no new single clue is in sight for easy against fast look-alikes. The most
+  promising next step is blending run 3 with Violet's detector v2, a quite different model
+  (rank correlation 0.58 on the test week), tested honestly on both models' out-of-fold scores.
+
+### ~12:20 — Blend: run 3 plus Violet's detector v2 (Alim)
+- **Change:** `src/blend.py`, a rank blend of the two test-week files: run 3
+  (`outputs/predictions_shapes_v2.csv`) and Violet's v2 (`outputs/predictions_violet_v2.csv`).
+  Neither model's code changes.
+- **Why:** the two models are built quite differently (Jack's LightGBM on motif and typology
+  clues; Violet's scikit-learn gradient boosting on wallet, window and gap-cluster clues plus a
+  neighbour stage). Their rankings agree only partly (rank correlation 0.49 on training
+  out-of-fold scores, 0.58 on the test week; 284 of their top 401 test payments shared), so each
+  catches cases the other misses.
+- **Honest test:** each model's own out-of-fold scores (every row scored by a model that never saw
+  its scheme), blended with a fixed weight, folds from `main.py`. Run 3 56.8 (folds 57.1 ± 5.9),
+  Violet 57.4 (57.1 ± 7.2). Violet's share 25%: 58.5 (59.0 ± 6.1); 40%: 58.6; **50%: 58.6
+  (58.9 ± 6.3)**, better than Violet alone in 4 of 5 folds; 60%: 58.5. Easy payments in the top
+  1,250: 89% (run 3), 92% (Violet), 94% (blend).
+- **Leaderboard:** Violet's v2 alone scored 65.1 (run 7), 3 points above run 3, so the weight
+  moved from 25% to 50% (the honest test is flat between them). The blend is not uploaded yet.
+- **Decision:** upload the 50/50 blend as run 8. Violet's own blend file
+  (`predictions_blend_violetv2_jackv3.csv`) uses run 4's model, which scored worse; don't upload it.
+
+## External data
+
+Every dataset we use that didn't come from the organisers. Required by the organisers' rules
+update at 11:50: say why we used it and whether it worked.
+
+| Dataset | Source | Why we used it | How we used it | Did it help? (honest test before → after) | Kept? |
+|---|---|---|---|---|---|
+| None yet | | | | | |
+
+Not counted as external data used in our entry: the public datasets we practised on before
+the event (IBM AML transactions on Kaggle, a slice of the AWS public XRPL data). They were for
+learning only and are not used by any of our code; see `prep/RESEARCH.md`.
 
 ## AI use
 
