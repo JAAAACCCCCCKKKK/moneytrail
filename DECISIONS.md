@@ -660,7 +660,24 @@ fall on both sides inflates the score.
   score is decided, so it gets one leaderboard probe:
   `outputs/predictions_blend_two_q_selftrain_violet.csv` (blended with Violet's model like the 67.1
   entry; rank correlation with the reproducible 67.1 rebuild 0.988, 371 of the top 402 shared).
+- **Also tried:** top 1% instead of 2% as pseudo-suspicious: 62.1 / 62.8, 6 of 15, worse; not used.
 - **Leaderboard:** not uploaded yet.
+
+### ~14:55 — A graph neural network over payments (Jack, with Claude Code)
+- **Change:** new `src/predict_gnn.py` (PyTorch 2.14.1, CPU). Nodes are payments; two payments are
+  linked when they share a non-hub wallet within 2 hours, in three relation types (money in through
+  the shared wallet, money out, siblings). A 2-layer relational GraphSAGE (mean pooling, hidden 64,
+  residual, dropout 0.2, 60 epochs, Adam 5e-3, positive weight 5) on the 527 clues of
+  `src.predict_two_q`, each mapped to a normal shape on the training week. Inductive: trained on the
+  training week's graph, it scores the test week's. Seeds fixed and 8 threads: reruns byte-identical.
+- **Why:** the team asked for a trained graph method; it learns how to pool evidence from connected
+  payments instead of our fixed 2-10 minute groups. Wallet-level graphs carry no signal here.
+- **Test predictions:** `python -m src.predict_gnn` → `outputs/predictions_gnn.csv` (74s). Rank
+  correlation with the reproducible 67.1 rebuild 0.758, 291 of the top 402 shared, so it ranks quite
+  differently. Blends with that rebuild (`src.blend --run3 predictions_blend_two_q_violet.csv --violet
+  predictions_gnn.csv --weight 0.25 / 0.5`): `predictions_blend_recipe_gnn25.csv` (top-402 overlap 376)
+  and `predictions_blend_recipe_gnn5.csv` (341).
+- **Honest test:** running (`python -m src.predict_gnn --cv`).
 
 ## External data
 

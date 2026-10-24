@@ -4,6 +4,7 @@ pyarrow
 networkx
 scikit-learn
 lightgbm
+torch          # only for src/predict_gnn.py; CPU build: pip install torch --index-url https://download.pytorch.org/whl/cpu
 xgboost
 shap
 matplotlib
