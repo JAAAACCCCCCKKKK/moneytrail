@@ -10,6 +10,7 @@ fall on both sides inflates the score.
 ## Where we are now (update this after every upload)
 
 - **Best leaderboard score: 62.0** (run 3, commit `6641b38`). Top 1%: precision 91%, recall 29%.
+  Run 4 (Jack's 20-minute window + medium weighting) scored 60.8, so it's dropped.
 - **Main pipeline: Jack's `src/`** (`python3 -m src.train`). Honest test 54.9 (folds 57.3 ± 9.9).
   `main.py` is kept only for comparison.
 - **New clues go into the `src/` pipeline.** After changing features, delete `data/cache/`
@@ -245,13 +246,29 @@ fall on both sides inflates the score.
 - **Test predictions:** `python -m src.predict_shapes_v2 --windows 120 300 600 1200
   --medium-weight 6 --out predictions_shapes_v3.csv`; passes the checker; rank correlation with
   run 3 0.842, top-401 overlap 358. Run 3 itself still reproduces byte for byte with the defaults.
-- **Leaderboard:** not uploaded.
-- **Decision:** worth one upload to confirm; keep run 3 as the reference if it doesn't beat 62.0.
+- **Leaderboard:** run 4 ("TEST 3" on the site), uploaded by Jack around 11:30 UTC from commit `a265fa9`. Score **60.8** (run 3 was 62.0, so −1.2). Top 1%: precision 89%, recall 29%. Caught in the top 1%: easy 40%, medium 0% (run 3: 10%), hard 0%.
+- **Decision:** dropped. A gain of about a point on the honest test didn't carry to the test week, and the medium weighting made medium worse in the top 1% (10% → 0%). Lesson: honest-test gains under about 1.5 points are inside the noise; only upload changes with a bigger, consistent gain. Run 3 stays our best.
 
 ### ~12:10 — Hard relays: history and whole-scheme tests, nothing separates them (Alim)
 - **Change:** analysis only. Tested per-payment history ideas on the 200 suspicious relay payments against their ~20,000 innocent look-alikes: amount equals the sum of the sender's last 2-12 incoming (same asset); amount is part of a split of an earlier receipt; amount equals an earlier receipt forwarded intact after an hour; days since the sender's previous payment. All at chance (AP 0.010 against 0.010 chance).
 - **Structure found:** the hard cases are 12 schemes (6 aggregate, 6 distributed relays), about 14-16 payments each, spanning the whole week (~133 h) across 10-12 wallets. Each sits in a cohort of 100 same-shaped schemes, 1 laundering and 99 innocent. Comparing each laundering scheme with its 99 siblings on 18 scheme-level properties (wallets, sources, sinks, USD total and spread, gaps, timing, assets, conversions, round amounts, night and weekend share, repeat pairs), every average percentile sits between 0.30 and 0.74, and at most 2 of the 12 are extreme on any one property. This matches Jack's 10:00 finding.
 - **Decision:** stop spending time on the hard relays. They look designed to be indistinguishable from what's observable (as the README warns, some hard cases have labels independent of observable features). The remaining points are in ranking easy and medium cases above innocent look-alikes, so Natasha moves to studying the easy and medium cases we still rank low.
+
+### ~12:25 — Longer motif windows (30 min, 1 h, 2 h) on the `src.train` model (Alim)
+- **Change:** experiment only (script not in the repo). Added Jack's motif features at 1,800s, 3,600s and 7,200s on top of run 2's 135 clues; also a variant where only quiet wallets (at most 15 payments in the week) can link payments.
+- **Why:** medium schemes are slow (median gap 1,066s over 110 minutes), so the 2-10 minute motifs never see their shape.
+- **Grouping:** plain long windows keep every medium scheme together but merge into huge groups (largest 9,184 payments at 30 minutes, 39,465 at 2 hours). The quiet-wallet variant links almost nothing (medium scheme wallets are busier than 15 payments a week).
+- **Honest test** (`src.train` folds, same as run 2's 54.9): plain long windows **56.6**, folds 58.6 ± 8.9, better in 4 of 5 folds; with long-window smoothing too, 56.7 (folds 57.8 ± 7.8). Quiet-wallet variant 55.2. Medium caught in the top 1,250: 10% → 11%, so the gain is general, not the medium fix.
+- **Leaderboard:** not uploaded.
+- **Decision:** passes our rule (more than a point, 4 of 5 folds) on its own. Worth Jack trying the plain 30-minute, 1-hour and 2-hour motif features on top of his run 4 candidate under his folds; it won't solve the medium cases by itself.
+
+### ~12:50 — Where the reachable points are, and not learning from impossible labels (Alim)
+- **Change:** analysis, then one experiment (`src.train` folds, same as run 2's 54.9).
+- **Ceiling checks (training labels used only to measure the upper bound):** scoring each payment by its true scheme's best score gives 58.7 (+3.8) and leaves medium at 11%. A model trained only on medium schemes against their innocent twins, with perfect whole-scheme clues (shape, speed, amounts), scores AP 0.14-0.15 against 0.17 chance: medium cases look built to resemble their look-alikes, like the hard ones. Pushing each kind of false alarm to the bottom would add: background +2.1, relay look-alikes +8.5 (218 of them in our top 1,250), shape look-alikes +9.8 (206, mostly the fast honest schemes Jack showed can't be told apart by tempo).
+- **Idea:** the 200 hard relay positives and 25 ambiguous ones can't be separated, so learning from them only teaches "relay-like is a bit suspicious", which lifts innocent relays into our top ranks.
+- **Honest test:** current 54.9 (folds 57.3 ± 9.9) → **not learning from the 225 hard and ambiguous positives 56.6** (folds 58.5 ± 9.8), better in 4 of 5 folds; relay false alarms in the top 1,250 218 → 179; easy 87% → 88%; hard 2% → 3%. Learning from them at a tenth of the weight: 55.9. These rows still count as positives when scoring, so the test stays honest; `difficulty` is used only as a training weight, never as a clue.
+- **Leaderboard:** not uploaded.
+- **Decision:** kept as a candidate. On its own it's at the edge of our 1.5-point noise threshold, so combine it with the other small consistent gains (long motif windows +1.7, Violet's dropped conversion clues +0.7) and upload the combination only if it clears 1.5 points on every check.
 
 ## External data
 
