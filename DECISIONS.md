@@ -605,6 +605,20 @@ fall on both sides inflates the score.
 - **Decision:** candidate. Next: add Jack's once-a-week-pair groups (`--once-groups`) to the
   structure model only, since the structure step is where the remaining reachable points are.
 
+### ~14:00 — Once-a-week-pair groups in the structure model (Alim, with Claude Code)
+- **Change:** experiment only (no code change). The structure model refit out of fold with Jack's
+  65 once-a-week-pair group clues (`features_motifs_once.py`) on top of its 412, then gated with
+  the combined model's out-of-fold scores. Both versions refit in the same script; the current
+  one reproduces 63.76 and 63.72 exactly.
+- **Why:** these groups hold slow medium schemes together, and telling planted schemes from
+  relays and background is where the reachable points are (previous entries).
+- **Honest test:** structure AP 85.8 → 87.1; medium payments' median structure rank 1,716 → 1,646.
+  Gate 63.76 → **64.00** (folds 64.4 → 64.5 ± 5.2, better in **2 of 5**); with 10% Violet
+  63.72 → 63.90.
+- **Leaderboard:** not uploaded.
+- **Decision:** dropped. A better structure model, but the gain in the final score is inside the
+  noise and fails our rule (more than a point, at least 4 of 5 folds).
+
 ## External data
 
 Every dataset we use that didn't come from the organisers. Required by the organisers' rules
