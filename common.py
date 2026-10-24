@@ -7,7 +7,8 @@ import pandas as pd
 
 ROOT = Path(__file__).parent
 DATA = ROOT / "data"
-WEEKS = {"train": DATA / "train", "validation": DATA / "validation", "test": DATA / "test-data"}
+WEEKS = {"train": DATA / "train", "validation": DATA / "validation", "test": DATA / "test-data",
+         "aug": DATA / "aug"}   # the training week plus scheme copies, from tools/augment.py
 
 sys.path.insert(0, str(DATA))  # the organisers' payments.py lives in data/
 from payments import load_payments  # noqa: E402
