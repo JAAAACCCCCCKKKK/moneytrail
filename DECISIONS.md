@@ -9,13 +9,13 @@ fall on both sides inflates the score.
 
 ## Where we are now (update this after every upload)
 
-- **Best leaderboard score: 65.6** (attempt 11, blend 30% run 3 + 70% Violet v2, commit
-  `65b3580`, `python3 -m src.blend --weight 0.7 --out predictions_blend_run3_violet70.csv`).
-  Top 1%: precision 93%, recall 30%. The 50/50 blend scored 65.5, Violet v2 alone 65.1, run 3
-  alone 62.0, Jack's candidate B 61.8 (dropped).
-- **Open problem for the final entry:** a fresh rerun of Violet's model on Alim's laptop differs
-  from her committed file (rank correlation 0.96, 371 of the top 401 shared). The final upload
-  must be a file our code reproduces, so this needs fixing (or the final file regenerated) by 15:30.
+- **Best leaderboard score: 66.4** (attempt 12, commit `3a2cb43`): 50/50 blend of the combined
+  model (`python3 -m src.predict_union`, Jack's and Violet's clues in one LightGBM) and Violet's
+  fixed model. Top 1%: precision 93%, recall 30%. **Every part reruns to an identical file**, so
+  this is a safe final entry. Exact commands: `RUN_THIS_VERSION.md` in the attempt 12 ZIP and
+  the "One model on both teams' clues" entry below.
+- Earlier: 30% run 3 + 70% Violet 65.6 (Violet's old file can't be recreated, so not a safe final
+  entry); 50/50 65.5; Violet v2 alone 65.1; run 3 62.0; Jack's candidate B 61.8 (dropped).
 - **Main pipeline: Jack's `src/`** (`python3 -m src.train`). Honest test 54.9 (folds 57.3 ± 9.9).
   `main.py` is kept only for comparison.
 - **New clues go into the `src/` pipeline.** After changing features, delete `data/cache/`
@@ -477,6 +477,7 @@ fall on both sides inflates the score.
 - **Decision:** next upload: 50/50 blend of the combined model and Violet's fixed model
   (`outputs/predictions_blend_union_violet.csv`; rank correlation 0.94 with the 65.6 upload, 376
   of the top 401 shared). Every part of it reruns to an identical file.
+- **Leaderboard:** attempt 12, **66.4** (+0.8 on 65.6; honest test predicted +2.2).
 
 ## External data
 
