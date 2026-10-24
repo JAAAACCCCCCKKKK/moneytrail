@@ -545,6 +545,8 @@ fall on both sides inflates the score.
   gone, which only the leaderboard can measure.
 - **Test file:** `outputs/predictions_blend_noconv.csv` (rank correlation 0.98 with the 66.7 file;
   382 of the top 401 shared). Upload as a probe.
+- **Leaderboard:** **66.5**, against 66.7 with the conversion clues. Dropped; the 66.7 version
+  stays our final candidate.
 
 ## External data
 
