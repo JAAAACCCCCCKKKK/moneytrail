@@ -534,6 +534,15 @@ fall on both sides inflates the score.
 - **Next:** drop the 25 conversion clues (13 Jack's, 12 Violet's) from the combined and structure
   models, the one measurable shift with no label signal.
 
+### ~13:35 — Combined and structure models without the 25 conversion clues (Alim)
+- **Change:** `src/predict_union.py --no-conversion` (both targets). Violet's own model keeps its
+  clues (her file is unchanged).
+- **Honest test:** combined model alone 60.0 → 60.3; full blend 62.5 → 62.6 (folds 62.7 ± 5.6 →
+  62.6 ± 5.0, better in 2 of 5). No loss on the training week, and the one clear test-week shift is
+  gone, which only the leaderboard can measure.
+- **Test file:** `outputs/predictions_blend_noconv.csv` (rank correlation 0.98 with the 66.7 file;
+  382 of the top 401 shared). Upload as a probe.
+
 ## External data
 
 Every dataset we use that didn't come from the organisers. Required by the organisers' rules

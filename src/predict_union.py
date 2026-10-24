@@ -31,7 +31,7 @@ import pandas as pd
 import common
 import graph
 from main import make_model, OUTPUTS
-from src.predict_shapes_v2 import prepare
+from src.predict_shapes_v2 import prepare, CONVERSION_KEYS
 
 SHAPES = ["bipartite", "chain", "cycle", "fan_in", "fan_out", "fan_out_in", "multi_stage", "random", "stack"]
 
@@ -62,6 +62,9 @@ def main():
                              "self-training: its top --pseudo-top share as suspicious, bottom half as innocent")
     parser.add_argument("--pseudo-top", type=float, default=0.02)
     parser.add_argument("--pseudo-weight", type=float, default=0.5)
+    parser.add_argument("--no-conversion", action="store_true",
+                        help="drop the 25 conversion clues (13 Jack's, 12 Violet's): the one clear train-to-test "
+                             "shift (41%% to 51%% conversions), and the README says asset choices ignore the labels")
     parser.add_argument("--out", default=None, help="file name inside outputs/")
     args = parser.parse_args()
     out_name = args.out or ("predictions_union.csv" if args.target == "suspicious" else "predictions_structure.csv")
@@ -69,7 +72,12 @@ def main():
     train, test, lab, X, Xt = prepare()
     U = pd.concat([X.reset_index(drop=True), violet_clues("train", train.TRANSACTION_HASH)], axis=1)
     Ut = pd.concat([Xt.reset_index(drop=True), violet_clues("test", test.TRANSACTION_HASH)], axis=1)[U.columns]
-    print(f"clues: Jack {X.shape[1]}, Violet {U.shape[1] - X.shape[1]}, together {U.shape[1]}")
+    if args.no_conversion:
+        drop = [c for c in U.columns if (not c.startswith("v_") and any(k in c for k in CONVERSION_KEYS))
+                or (c.startswith("v_") and any(k in c.lower() for k in ("conv", "legs", "asset", "sm_slack")))]
+        U, Ut = U.drop(columns=drop), Ut.drop(columns=drop)
+    n_violet = sum(c.startswith("v_") for c in U.columns)
+    print(f"clues: Jack {U.shape[1] - n_violet}, Violet {n_violet}, together {U.shape[1]}")
 
     if args.target == "structure":
         y = lab.family.isin(SHAPES).to_numpy().astype(int)
