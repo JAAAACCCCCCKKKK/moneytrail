@@ -9,12 +9,12 @@ fall on both sides inflates the score.
 
 ## Where we are now (update this after every upload)
 
-- **Best leaderboard score: 66.7** (12:21 UTC, `moneytrail-run17`, code `a336f9d`): 50/50 blend of
-  the combined model with Jack's deck signals (`python -m src.predict_union_signals`) and Violet's
-  fixed model. Top 1%: precision 95%, recall 31%. Reruns byte for byte.
-- **Next upload candidate (13:45):** `outputs/predictions_blend_two_q_violet.csv`, the two-question
-  model with slow-scheme groups (`python -m src.predict_two_q`) blended with Violet's model. Honest
-  test 62.3 pooled / 63.1 fold mean vs 60.2 / 60.6, 14 of 15 folds better; lifts medium cases.
+- **Best leaderboard score: 67.1** (12:52 UTC, commit `ed19b17`): the two-question model with
+  slow-scheme groups (`python -m src.predict_two_q`) blended 50/50 with Violet's fixed model
+  (`python -m src.blend --run3 predictions_two_q.csv --violet predictions_violet_v2_fixed.csv --out
+  predictions_blend_two_q_violet.csv`). Top 1%: precision 93%, recall 30%. Reruns byte for byte.
+- Earlier: 66.7 (12:21 UTC, `moneytrail-run17`, code `a336f9d`): the combined model with Jack's deck
+  signals (`python -m src.predict_union_signals`) blended 50/50 with Violet's fixed model.
 - Earlier: 66.4 (attempt 12, commit `3a2cb43`): 50/50 blend of the combined model
   (`python3 -m src.predict_union`) and Violet's fixed model.
 - Earlier: 30% run 3 + 70% Violet 65.6 (Violet's old file can't be recreated, so not a safe final
@@ -571,7 +571,11 @@ fall on both sides inflates the score.
   where medium lives (the leaderboard panel's top-1% bars won't show it).
 - **Risk:** the test week has fewer very fast scheme-like groups than training (gap ≤60s: 24 vs 43),
   which fits the README's "batch variations"; the 50/50 blends keep the single models as a safety net.
-- **Leaderboard:** not uploaded yet.
+- **Leaderboard:** 12:52 UTC, commit `ed19b17`. Score **67.1** (+0.4 on 66.7). Top 1%: precision 93%
+  (95% before), recall 30%; easy 50%, medium 0% (10% before); ROC-AUC 0.91. The gain is below the
+  top 1%, as expected; the top 1% picked up a few more false alarms. Smaller than the honest test
+  (+2.1 pooled), in the same direction.
+- **Decision:** kept, new best.
 - **Next if time:** better grouping for slow schemes. Once-pair groups at 30 minutes estimate a medium
   scheme's gap at only 0.43-0.55 of its true value and leave 30% of medium payments ungrouped.
 
