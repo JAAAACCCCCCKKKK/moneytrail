@@ -60,12 +60,29 @@ def violet_clues(week, hashes):
     return F.reset_index(drop=True).astype(float)
 
 
-def fit_seeds(X, y, X_score, n_seeds):
-    """Average LightGBM probabilities over seeds 42, 43, ... (n_seeds=1 is the original single model)."""
+def make_xgb(seed):
+    """XGBoost with settings close to the LightGBM ones in main.make_model."""
+    import xgboost as xgb
+    return xgb.XGBClassifier(n_estimators=400, learning_rate=0.05, max_depth=6, min_child_weight=5,
+                             subsample=0.8, colsample_bytree=0.8, tree_method="hist",
+                             random_state=seed, n_jobs=-1, verbosity=0)
+
+
+def fit_seeds(X, y, X_score, n_seeds, use_xgb=False):
+    """Average LightGBM probabilities over seeds 42, 43, ... (n_seeds=1 is the original single model).
+
+    With use_xgb, also average XGBoost over the same seeds and give the two model kinds equal weight.
+    """
     p = np.zeros(len(X_score))
     for k in range(n_seeds):
         p += make_model("lgbm", seed=42 + k).fit(X, y).predict_proba(X_score)[:, 1]
-    return p / n_seeds
+    p /= n_seeds
+    if not use_xgb:
+        return p
+    q = np.zeros(len(X_score))
+    for k in range(n_seeds):
+        q += make_xgb(42 + k).fit(X, y).predict_proba(X_score)[:, 1]
+    return (p + q / n_seeds) / 2
 
 
 def main():
@@ -90,6 +107,8 @@ def main():
                         help="add Jack's once-a-week-pair group clues (features_motifs_once.py)")
     parser.add_argument("--seeds", type=int, default=1,
                         help="average this many LightGBM seeds (42, 43, ...); 1 = the original single model")
+    parser.add_argument("--xgb", action="store_true",
+                        help="also train XGBoost (same seeds) and average it 50/50 with LightGBM")
     parser.add_argument("--out", default=None, help="file name inside outputs/")
     args = parser.parse_args()
     out_name = args.out or ("predictions_union.csv" if args.target == "suspicious" else "predictions_structure.csv")
@@ -108,7 +127,7 @@ def main():
 
     if args.target == "structure":
         y = lab.family.isin(SHAPES).to_numpy().astype(int)
-        final = fit_seeds(U, y, Ut, args.seeds)                               # no smoothing, as tested
+        final = fit_seeds(U, y, Ut, args.seeds, args.xgb)                               # no smoothing, as tested
     elif args.self_train_from:
         # one round of self-training on the test week: uses only our own earlier test scores, never test answers
         prior = test[["TRANSACTION_HASH"]].merge(pd.read_csv(OUTPUTS / args.self_train_from), on="TRANSACTION_HASH").score
@@ -121,7 +140,7 @@ def main():
         test_pay = test[["TRANSACTION_HASH"]].merge(common.payments("test"), on="TRANSACTION_HASH")
         final = graph.smooth_by_group(raw, test_pay, "test")
     else:
-        raw = fit_seeds(U, lab.is_suspicious.to_numpy(), Ut, args.seeds)
+        raw = fit_seeds(U, lab.is_suspicious.to_numpy(), Ut, args.seeds, args.xgb)
         test_pay = test[["TRANSACTION_HASH"]].merge(common.payments("test"), on="TRANSACTION_HASH")
         final = graph.smooth_by_group(raw, test_pay, "test")
     if args.probabilities:
