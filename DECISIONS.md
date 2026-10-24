@@ -116,7 +116,7 @@ Times are London time (BST, UTC+1) and approximate for the first three entries.
 - **Test predictions:** `predictions_shapes_v1.csv` passes the checker (40,101 rows, all
   distinct). Rank correlation with the baseline's test scores is 0.50; their top-1% sets share
   127 of 401 transactions.
-- **Leaderboard:** not uploaded yet.
+- **Leaderboard:** run 2, uploaded 09:59 UTC from commit bbf8675 (rerun on Alim's laptop: honest test 54.9, folds 57.3 ± 9.9, so it reproduces). Score **61.4** (run 1 was 33.6). Top 1%: precision 93%, recall 30%. Caught in the top 1%: easy 50% of 800, medium 0% of 225, observable hard 0%, ambiguous 0%. Note: the top 1% is only 401 transactions against 1,250 suspicious, so recall there can't exceed about 32%; at 93% precision it is nearly full of easy cases, which is why medium reads 0% even though the overall score rose.
 - **Decision:** kept. Hard recall in the top 1% is still 0.00, as expected.
 
 ### ~11:00 — Label study: easy cases first, hard relays look ordinary payment by payment
