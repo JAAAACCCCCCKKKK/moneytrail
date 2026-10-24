@@ -33,10 +33,10 @@ def cluster_features(base, Gs=(120, 300, 600, 900)):
             senders = set(g.S); receivers = set(g.R); accs = senders | receivers; mid = senders & receivers
             gaps = np.diff(t) if n > 1 else np.array([0.0])
             inn = g.groupby("R").V.sum(); outv = g.groupby("S").SV.sum()
-            m = list(mid)
+            m = sorted(mid)  # fixed order: set order changes per run and shifts float sums
             cons = outv[m].sum() / inn[m].sum() if m else 0.0
             indeg = g.groupby("R").S.nunique().max(); outdeg = g.groupby("S").R.nunique().max()
-            wk = week_cnt.reindex(list(accs)).to_numpy(float)
+            wk = week_cnt.reindex(sorted(accs)).to_numpy(float)
             rows.append((cid, n, len(accs), t[-1] - t[0], np.median(gaps), gaps.max(), len(mid) / len(accs),
                          cons, indeg, outdeg, g.V.std() / (g.V.mean() + 1e-9) if n > 1 else 0, g.conv.mean(),
                          g.asset.nunique(), (g.pc > 1).mean(), np.log1p(g.V.sum()), wk.mean(),

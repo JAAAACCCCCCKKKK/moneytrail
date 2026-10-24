@@ -446,6 +446,33 @@ fall on both sides inflates the score.
   variations absent from training", and a kind of scheme the scheme model doesn't recognise
   would be pushed down hard by the multiplication.
 
+### ~12:40 — Violet's model made reproducible (Alim, change approved by Alim as captain)
+- **Problem:** two fresh reruns of `detector/predict.py` gave different test files (against her
+  committed file: rank correlation 0.96, 371 of the top 401 shared). The organisers rerun our
+  final code, so our best score must be reproducible.
+- **Cause:** `detector/clusters.py` added up the money passed on by a cluster's middle wallets in
+  the order of a Python set of wallet addresses, which changes every time Python starts. The total
+  then differs in the last decimal place, which is enough to move a value into another bin and
+  change the trees; the neighbour stage amplifies it.
+- **Fix:** sort the wallets first (`sorted(mid)`, `sorted(accs)`), two lines.
+- **Check:** Violet's clues built under two different Python hash seeds: old code, 4 clues differ
+  (`cl120_cons` to `cl900_cons`, on 122 to 6,803 payments); fixed code, all 225 clues identical.
+- **Consequence:** the fixed model gives a slightly different test file from the one that scored
+  65.1, so its score has to be confirmed by a new upload.
+
+### ~12:40 — One model on both teams' clues (Alim)
+- **Change:** `src/predict_union.py`: one LightGBM (run 3's settings) on Jack's 187 run 3 clues
+  plus Violet's 225 detector clues (prefixed `v_`), then run 3's group smoothing. Neither
+  teammate's file changes.
+- **Why:** blending the two models helped on the leaderboard but the blend weight no longer
+  matters; one model that sees both clue sets can combine them clue by clue, which a blend can't.
+- **Honest test** (`main.py` folds, same as all the out-of-fold scores above): run 3 56.8, Violet
+  57.4, best upload so far (30% run 3 + 70% Violet) 58.4 (folds 58.5 ± 6.6). One model, raw 59.5;
+  **with group smoothing 60.0** (folds 60.4 ± 5.3), better than the best upload in 4 of 5 folds.
+  **Blended 50/50 with Violet's model: 60.6** (folds 60.7 ± 5.9 [56.4, 66.8, 55.9, 68.9, 55.4]),
+  better in 5 of 5 folds; easy payments in the top 1,250 95%. Thirds with run 3 as well: 60.0.
+- **Decision:** next upload: 50/50 blend of the combined model and Violet's fixed model.
+
 ## External data
 
 Every dataset we use that didn't come from the organisers. Required by the organisers' rules
