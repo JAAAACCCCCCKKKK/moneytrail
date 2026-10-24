@@ -253,6 +253,14 @@ fall on both sides inflates the score.
 - **Structure found:** the hard cases are 12 schemes (6 aggregate, 6 distributed relays), about 14-16 payments each, spanning the whole week (~133 h) across 10-12 wallets. Each sits in a cohort of 100 same-shaped schemes, 1 laundering and 99 innocent. Comparing each laundering scheme with its 99 siblings on 18 scheme-level properties (wallets, sources, sinks, USD total and spread, gaps, timing, assets, conversions, round amounts, night and weekend share, repeat pairs), every average percentile sits between 0.30 and 0.74, and at most 2 of the 12 are extreme on any one property. This matches Jack's 10:00 finding.
 - **Decision:** stop spending time on the hard relays. They look designed to be indistinguishable from what's observable (as the README warns, some hard cases have labels independent of observable features). The remaining points are in ranking easy and medium cases above innocent look-alikes, so Natasha moves to studying the easy and medium cases we still rank low.
 
+### ~12:25 — Longer motif windows (30 min, 1 h, 2 h) on the `src.train` model (Alim)
+- **Change:** experiment only (script not in the repo). Added Jack's motif features at 1,800s, 3,600s and 7,200s on top of run 2's 135 clues; also a variant where only quiet wallets (at most 15 payments in the week) can link payments.
+- **Why:** medium schemes are slow (median gap 1,066s over 110 minutes), so the 2-10 minute motifs never see their shape.
+- **Grouping:** plain long windows keep every medium scheme together but merge into huge groups (largest 9,184 payments at 30 minutes, 39,465 at 2 hours). The quiet-wallet variant links almost nothing (medium scheme wallets are busier than 15 payments a week).
+- **Honest test** (`src.train` folds, same as run 2's 54.9): plain long windows **56.6**, folds 58.6 ± 8.9, better in 4 of 5 folds; with long-window smoothing too, 56.7 (folds 57.8 ± 7.8). Quiet-wallet variant 55.2. Medium caught in the top 1,250: 10% → 11%, so the gain is general, not the medium fix.
+- **Leaderboard:** not uploaded.
+- **Decision:** passes our rule (more than a point, 4 of 5 folds) on its own. Worth Jack trying the plain 30-minute, 1-hour and 2-hour motif features on top of his run 4 candidate under his folds; it won't solve the medium cases by itself.
+
 ## External data
 
 Every dataset we use that didn't come from the organisers. Required by the organisers' rules
