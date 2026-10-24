@@ -603,6 +603,27 @@ fall on both sides inflates the score.
 - **Decision:** both dropped. Bagging is inside the noise; not learning from hard positives hurts here,
   as it did on run 3's pipeline. The 67.1 recipe stays the final entry unless something beats it.
 
+### ~14:20 — A learned payment linker instead of fixed-window groups (Jack, with Claude Code)
+- **Change:** experiment only. Candidate pairs are payments sharing a non-hub wallet within 2 hours
+  (203,088 pairs). A LightGBM learns "same planted scheme?" from 8 pair clues (time apart, money
+  flowing through the shared wallet, once-a-week pairs, amount ratio, roles, how busy each end is),
+  with `scenario_id` as a training target only. Payments are grouped through links it scores at 0.5
+  or 0.7 and above; each group's median gap gives the share of training schemes at that speed that
+  are suspicious, times P(scheme), rank-blended 50/50 with the combined model.
+- **Why:** every grouping clue so far uses fixed windows, and grouping plus scheme detection is where
+  the measured headroom is (13:45). Every planted scheme, medium included, is fully connected by
+  these candidate pairs.
+- **The linker itself:** on schemes it never saw, AUC 0.93 and AP 0.74 (base rate 0.21); at the same
+  number of links as the once-a-week 30-minute rule, 81% of its links are right against 61%. It
+  groups 85% of medium payments (static rule 70%). Each fold's linker never sees that fold's schemes.
+- **Honest test** (three fold seeds, pooled / fold mean, folds better than the 67.1 recipe): recipe
+  62.3 / 63.1; linker at 0.5 62.3 / 63.9, 10 of 15; at 0.7 62.2 / 63.8, 9 of 15; thirds with the
+  recipe 62.2 / 63.3-63.4, 8-9 of 15. Medium median rank about 2,640 → 2,260; easy in the top 1,250
+  0.97 → 0.96.
+- **Decision:** not uploaded. Inside the noise, and it gives up a little at the top, where a single
+  false alarm costs about 0.4 points of average precision. Kept here as the most promising next step
+  with more time: feed the learned groups' clues into the scheme model instead of a one-number speed.
+
 ## External data
 
 Every dataset we use that didn't come from the organisers. Required by the organisers' rules
