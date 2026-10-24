@@ -624,6 +624,26 @@ fall on both sides inflates the score.
   false alarm costs about 0.4 points of average precision. Kept here as the most promising next step
   with more time: feed the learned groups' clues into the scheme model instead of a one-number speed.
 
+### ~14:40 — Reproducibility: the 66.7 and 67.1 files can't be recreated exactly; fixed (Jack, with Claude Code)
+- **Found by:** a fresh clone with raw data only, running the documented commands (19 minutes). All
+  three files differed from the committed ones. Violet's model reproduced exactly (same ranks; the
+  only differences are in the 17th decimal place).
+- **Cause:** `features_shape_signals.py` depended on Python's set order, which changes every time
+  Python starts. When two destinations tie, the scatter-gather clue picked whichever came first in a
+  set (`sig_sg_value_balance`, `sig_sg_hold_median`, `sig_sg_hold_spread` differed by up to 1,796s
+  between two runs); the loop clue broke ties on span the same way; bipartite and group clues summed
+  floats in set order. Our cached v1 tables were one random draw, so the 66.7 and 67.1 uploads used
+  features the committed code doesn't reproduce.
+- **Fix:** iterate in sorted order at each of those points (as Violet's 12:40 fix), and cache version
+  v1 → v2 so stale tables on anyone's laptop are rebuilt. Built twice from an empty cache under two
+  different hash seeds: identical clue tables and identical final files.
+- **Consequence:** the rebuilt 67.1-recipe file differs a little from the uploaded one (rank
+  correlation 0.9935, 397 of the top 402 shared), so the final entry must be the rebuilt file, and it
+  needs one upload to learn its score. `outputs/` now holds rebuilt files for the 66.7 and 67.1
+  recipes; the linker files (dropped) are left as they were uploaded.
+- **Learned linker on the leaderboard:** 66.4-66.8 (reported by Jack), below 67.1. Dropped, as the
+  honest test suggested.
+
 ## External data
 
 Every dataset we use that didn't come from the organisers. Required by the organisers' rules

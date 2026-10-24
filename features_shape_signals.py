@@ -54,7 +54,7 @@ HOP_WINDOW, MAX_HOPS, LOOP_WINDOW, MAX_REACH = 900, 8, 21600, 200   # as feature
 MAX_ROUTE_WALLETS, MAX_ROUTES, MAX_ROUTE_LEN = 60, 50, 8
 BIG = 7 * 86400.0
 CACHE = common.DATA / "cache"
-VERSION = "v1"
+VERSION = "v2"      # v1 caches depended on Python's set order (fixed 14:40); rebuild them
 
 
 def _span(times, lo, hi):
@@ -187,7 +187,7 @@ def _scatter_gather(p, hist, touch, hub_set):
             e[1] += vm
             e[2] += 1
         best = None
-        for x in finals:
+        for x in sorted(finals):                     # sorted: ties must not depend on set order
             links = []
             for m, (tm, vm, cm) in paid.items():
                 if m == x:
@@ -241,7 +241,7 @@ def _bipartite(p, hist, touch, hub_set):
         rows = set()
         for w in block:
             rows.update(touch.rows(w, t - W, t + W).tolist())
-        rows = np.fromiter(rows, dtype=np.int64)
+        rows = np.fromiter(sorted(rows), dtype=np.int64)
         internal = rows[np.isin(src[rows], list(block)) & np.isin(dst[rows], list(block))]
         inside_share[i] = len(internal) / len(rows)
         cross = internal[np.isin(src[internal], list(payers)) & np.isin(dst[internal], list(receivers))]
@@ -302,7 +302,7 @@ def _loops(p, hist, hub_set, asset):
             continue
         behind, _ = _search(hist, hub_set, asset, s, t0, -1, 0)
         best = None
-        for z in (set(ahead) & set(behind)) - {s, d}:
+        for z in sorted((set(ahead) & set(behind)) - {s, d}):
             span = ahead[z][0] - behind[z][0]
             if span > 0 and (best is None or span < best[0]):
                 best = (span, ahead[z][1] + behind[z][1], ahead[z][2] | behind[z][2])
@@ -348,6 +348,7 @@ def _group_clues(p, touch, week_n, groups, prefix):
         res = {}
         if middles:
             inside = Counter(gs.tolist()) + Counter(gd.tolist())
+            middles = sorted(middles)
             res["middle_week_log"] = float(np.median([np.log1p(week_n[m]) for m in middles]))
             res["middle_once_share"] = float(np.mean(
                 [touch.count(m, t0 - 3600, t1 + 3600) == inside[m] for m in middles]))
@@ -362,7 +363,7 @@ def _group_clues(p, touch, week_n, groups, prefix):
                 res["hold_spread"] = _cv(holds)
         rowset = set(rows.tolist())
         external, ext_in, ext_out = set(), 0.0, 0.0
-        for w in wallets:
+        for w in sorted(wallets):
             for k in touch.rows(w, t0, t1).tolist():
                 if k in rowset or k in external:
                     continue
@@ -381,7 +382,7 @@ def _group_clues(p, touch, week_n, groups, prefix):
                 net[a] -= v
                 net[b_] += v
             entry, exit_ = min(net, key=net.get), max(net, key=net.get)
-            res["routes"] = float(_count_routes(set(zip(gs, gd)), entry, exit_)) if entry != exit_ else 0.0
+            res["routes"] = float(_count_routes(sorted(set(zip(gs, gd))), entry, exit_)) if entry != exit_ else 0.0
         for k, v in res.items():
             out[k][rows] = v
     return {f"{prefix}{k}": v for k, v in out.items()}
