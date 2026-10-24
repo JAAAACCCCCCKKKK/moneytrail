@@ -262,6 +262,14 @@ fall on both sides inflates the score.
 - **Leaderboard:** not uploaded.
 - **Decision:** passes our rule (more than a point, 4 of 5 folds) on its own. Worth Jack trying the plain 30-minute, 1-hour and 2-hour motif features on top of his run 4 candidate under his folds; it won't solve the medium cases by itself.
 
+### ~12:50 — Where the reachable points are, and not learning from impossible labels (Alim)
+- **Change:** analysis, then one experiment (`src.train` folds, same as run 2's 54.9).
+- **Ceiling checks (training labels used only to measure the upper bound):** scoring each payment by its true scheme's best score gives 58.7 (+3.8) and leaves medium at 11%. A model trained only on medium schemes against their innocent twins, with perfect whole-scheme clues (shape, speed, amounts), scores AP 0.14-0.15 against 0.17 chance: medium cases look built to resemble their look-alikes, like the hard ones. Pushing each kind of false alarm to the bottom would add: background +2.1, relay look-alikes +8.5 (218 of them in our top 1,250), shape look-alikes +9.8 (206, mostly the fast honest schemes Jack showed can't be told apart by tempo).
+- **Idea:** the 200 hard relay positives and 25 ambiguous ones can't be separated, so learning from them only teaches "relay-like is a bit suspicious", which lifts innocent relays into our top ranks.
+- **Honest test:** current 54.9 (folds 57.3 ± 9.9) → **not learning from the 225 hard and ambiguous positives 56.6** (folds 58.5 ± 9.8), better in 4 of 5 folds; relay false alarms in the top 1,250 218 → 179; easy 87% → 88%; hard 2% → 3%. Learning from them at a tenth of the weight: 55.9. These rows still count as positives when scoring, so the test stays honest; `difficulty` is used only as a training weight, never as a clue.
+- **Leaderboard:** not uploaded.
+- **Decision:** kept as a candidate. On its own it's at the edge of our 1.5-point noise threshold, so combine it with the other small consistent gains (long motif windows +1.7, Violet's dropped conversion clues +0.7) and upload the combination only if it clears 1.5 points on every check.
+
 ## External data
 
 Every dataset we use that didn't come from the organisers. Required by the organisers' rules
