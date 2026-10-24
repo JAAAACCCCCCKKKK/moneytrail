@@ -802,6 +802,24 @@ fall on both sides inflates the score.
   so our honest test can no longer judge refinements of the gate. **67.8
   (`predictions_gate_v10.csv`) is the final entry.**
 
+### ~14:40 — gdn6's IBM AMLworld helper clue (gdn6; fixed and tested by Alim, with Claude Code)
+- **Change:** `src/external_ibm.py` (gdn6, `f7a5ea5`): a LightGBM trained on the first 7 days of IBM's
+  HI-Small synthetic bank transfers (Kaggle, external data) on 13 simple clues, used to score our
+  payments as one extra clue, `ext_ibm_score`. Option `src.predict_union --ibm`.
+- **Fixed before it could run:** (1) `import features_wallet` → `from src import features_wallet`;
+  (2) the data path pointed at `src/data/external/`, now the repo's `data/external/`; (3) our
+  `TIMESTAMP` is seconds, but it was parsed as nanoseconds (payment time 1788221144 became
+  1970-01-01 00:00:01.79), so every 10-minute, 1-hour and 24-hour count covered the whole week. It
+  now uses Natasha's `features_wallet.parse_time`.
+- **Honest test** (same folds as the 67.8 version, refit in the same run, which reproduces 63.72):
+  the IBM score alone has AP 2.9 on our training week (chance 3.1). In the gate: combined model
+  63.74, structure model **63.81**, both 63.79; each better in 3 of 5 folds.
+- **Test file:** `predictions_gate_ibm_v10.csv` (IBM clue in the structure model; rank correlation
+  0.987 with the 67.8 file, 398 of the top 401 shared). Passes the checker; `--ibm` recreates it.
+- **Leaderboard:** not uploaded yet.
+- **Decision:** no signal (a model of bank transfers doesn't transfer to this ledger). Built as a
+  probe at the captain's request; the 67.8 version stays the final entry unless this beats it.
+
 ### ~14:50 — Averaging seeds and model kinds on the 67.8 gate (Violet, with Claude)
 - **Change:** `src/predict_union.py --seeds N` averages LightGBM over seeds 42, 43, ...; `--xgb` also
   trains XGBoost (400 trees, depth 6, same sampling) on the same seeds and averages it 50/50 with
@@ -822,7 +840,7 @@ update at 11:50: say why we used it and whether it worked.
 
 | Dataset | Source | Why we used it | How we used it | Did it help? (honest test before → after) | Kept? |
 |---|---|---|---|---|---|
-| None yet | | | | | |
+| IBM Transactions for Anti Money Laundering (AMLworld), `HI-Small_Trans.csv` | Kaggle, `ealtman2019/ibm-transactions-for-anti-money-laundering-aml` (synthetic data from IBM; downloaded with `kagglehub`, not in the repo or the ZIP) | Its labels teach a general "laundering-like payment" model on clues that exist in both datasets | A LightGBM on its first 7 days scores our payments; that score is one extra clue (`src/external_ibm.py`, `src.predict_union --ibm`). Never sees our labels | No: the score alone AP 2.9 vs chance 3.1; in the gate 63.72 → 63.74-63.81, 3 of 5 folds | Not in the final entry (probe only) |
 
 Not counted as external data used in our entry: the public datasets we practised on before
 the event (IBM AML transactions on Kaggle, a slice of the AWS public XRPL data). They were for

@@ -22,9 +22,9 @@ import lightgbm as lgb
 import numpy as np
 import pandas as pd
 
-import features_wallet
+from src import features_wallet
 
-IBM_PATH = Path(__file__).resolve().parent / "data" / "external" / "HI-Small_Trans.csv"
+IBM_PATH = Path(__file__).resolve().parents[1] / "data" / "external" / "HI-Small_Trans.csv"   # repo root, not src/
 SLICE_DAYS = 7
 NORMALS_PER_POSITIVE = 32  # about 3% suspicious, like our test week
 SEED = 42
@@ -63,7 +63,7 @@ def _shared_features(payments):
     c = COLS
     wallet = features_wallet.add_features(payments, "external").reset_index(drop=True)
 
-    time = pd.to_datetime(payments[c["time"]], utc=True).dt.tz_localize(None)
+    time = features_wallet.parse_time(payments[c["time"]])    # our TIMESTAMP is seconds, not nanoseconds
     df = pd.DataFrame({
         "sender": payments[c["sender"]].astype(str).to_numpy(),
         "receiver": payments[c["receiver"]].astype(str).to_numpy(),

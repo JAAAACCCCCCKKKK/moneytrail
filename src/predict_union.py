@@ -109,6 +109,9 @@ def main():
                         help="average this many LightGBM seeds (42, 43, ...); 1 = the original single model")
     parser.add_argument("--xgb", action="store_true",
                         help="also train XGBoost (same seeds) and average it 50/50 with LightGBM")
+    parser.add_argument("--ibm", action="store_true",
+                        help="add one clue, ext_ibm_score: a helper model trained on the IBM AMLworld HI-Small "
+                             "data (external, src/external_ibm.py; needs data/external/HI-Small_Trans.csv)")
     parser.add_argument("--out", default=None, help="file name inside outputs/")
     args = parser.parse_args()
     out_name = args.out or ("predictions_union.csv" if args.target == "suspicious" else "predictions_structure.csv")
@@ -122,6 +125,11 @@ def main():
         drop = [c for c in U.columns if (not c.startswith("v_") and any(k in c for k in CONVERSION_KEYS))
                 or (c.startswith("v_") and any(k in c.lower() for k in ("conv", "legs", "asset", "sm_slack")))]
         U, Ut = U.drop(columns=drop), Ut.drop(columns=drop)
+    if args.ibm:
+        from src import external_ibm
+        for frame, week, rows in ((U, "train", train), (Ut, "test", test)):
+            score = external_ibm.add_features(common.payments(week), week).set_index("TRANSACTION_HASH").ext_ibm_score
+            frame["ext_ibm_score"] = score.loc[rows.TRANSACTION_HASH].to_numpy()
     n_violet = sum(c.startswith("v_") for c in U.columns)
     print(f"clues: Jack {U.shape[1] - n_violet}, Violet {n_violet}, together {U.shape[1]}")
 
