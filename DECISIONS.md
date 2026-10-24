@@ -9,11 +9,14 @@ fall on both sides inflates the score.
 
 ## Where we are now (update this after every upload)
 
-- **Best leaderboard score: 66.4** (attempt 12, commit `3a2cb43`): 50/50 blend of the combined
-  model (`python3 -m src.predict_union`, Jack's and Violet's clues in one LightGBM) and Violet's
-  fixed model. Top 1%: precision 93%, recall 30%. **Every part reruns to an identical file**, so
-  this is a safe final entry. Exact commands: `RUN_THIS_VERSION.md` in the attempt 12 ZIP and
-  the "One model on both teams' clues" entry below.
+- **Best leaderboard score: 66.7** (12:21 UTC, `moneytrail-run17`, code `a336f9d`): 50/50 blend of
+  the combined model with Jack's deck signals (`python -m src.predict_union_signals`) and Violet's
+  fixed model. Top 1%: precision 95%, recall 31%. Reruns byte for byte.
+- **Next upload candidate (13:45):** `outputs/predictions_blend_two_q_violet.csv`, the two-question
+  model with slow-scheme groups (`python -m src.predict_two_q`) blended with Violet's model. Honest
+  test 62.3 pooled / 63.1 fold mean vs 60.2 / 60.6, 14 of 15 folds better; lifts medium cases.
+- Earlier: 66.4 (attempt 12, commit `3a2cb43`): 50/50 blend of the combined model
+  (`python3 -m src.predict_union`) and Violet's fixed model.
 - Earlier: 30% run 3 + 70% Violet 65.6 (Violet's old file can't be recreated, so not a safe final
   entry); 50/50 65.5; Violet v2 alone 65.1; run 3 62.0; Jack's candidate B 61.8 (dropped).
 - **Main pipeline now:** `src/predict_union.py` (combined model) + `detector/` (Violet's model)
@@ -520,6 +523,58 @@ fall on both sides inflates the score.
 - **Leaderboard:** not uploaded, and this file should not be uploaded as is: its base, candidate B,
   scored 61.8 (attempt 10), below run 3's 62.0.
 
+### ~13:20 — Combined model + deck signals, blended with Violet (Jack, uploaded by the team)
+- **Change:** `python -m src.predict_union_signals` (the combined model with `features_shape_signals.py`
+  added), then a 50/50 rank blend with Violet's fixed model (`src.blend --run3
+  predictions_union_signals.csv --violet predictions_violet_v2_fixed.csv`). Recreated byte for byte at 13:45.
+- **Leaderboard:** 12:21 UTC, `moneytrail-run17-code.zip`, code at `a336f9d`. Score **66.7** (66.4
+  before). Top 1%: precision 95%, recall 31%; easy 50%, medium 10%, observable hard 0%, ambiguous 0%;
+  ROC-AUC 0.91.
+- **Decision:** kept, best so far.
+
+### ~13:45 — Why we plateau near 65, and two questions with slow-scheme groups (Jack, with Claude Code)
+- **Where the points go** (combined model + signals, `main.py` folds, honest test 60.4): easy cases
+  give 51.9 points (mean precision at an easy case 0.81), medium 5.8 (0.32), hard relays 2.4,
+  ambiguous 0.3. Easy is close to its limit: 17 of 140 honest look-alike schemes are as fast as
+  laundering. Medium sits at a median rank of 3,856, below 913 relay and 291 background payments
+  in the top 2,500.
+- **Ruled out first (each alone, AUC about 0.50):** decimal places of the delivered amount, round USD
+  amounts, wallets reused across suspicious schemes, how busy a scheme's wallets are, scheme size
+  and wallet count. The generator matches suspicious and honest schemes on everything except speed.
+- **Ceiling (labels used only to measure it):** knowing which payments belong to a planted shape
+  scheme, grouping each scheme exactly, and ranking schemes by how often a scheme of that speed is
+  suspicious would score **about 72**. Either half alone adds only about 1.5 (true scheme membership
+  61.7; exact grouping 62.1), because a medium scheme runs at about 18 minutes between payments
+  while our groups are 2 to 10 minutes wide, so its payments look like isolated background ones.
+  Slow schemes are still about 1 in 4 suspicious (median gap 960-1,920s: 31%; 480-960s: 16%),
+  far above any background or relay payment.
+- **Change:** new file `src/predict_two_q.py`. Two LightGBM
+  models on the combined clues plus the once-a-week-pair group clues (`features_motifs_once.py`):
+  (1) on every row, "is this part of a planted shape scheme, suspicious or not?" (`family` outside
+  background, the two relays and ambiguous; a training target only, never a clue); (2) on scheme rows
+  only, `is_suspicious`. Score (1) × (2), unsmoothed, rank-blended 50/50 with the combined model.
+  96% of scheme payments are once-a-week pairs against 28% of background and 36% of relay ones.
+- **Honest test** (`main.py` folds, three fold seeds, pooled / fold mean): combined model 60.2 / 60.6;
+  **two questions blended 62.3 / 63.1, better in 14 of 15 folds** (seed 42 61.8 / 62.0, 4 of 5;
+  seed 7 62.7 / 63.7, 5 of 5; seed 2026 62.4 / 63.7, 5 of 5). Medium median rank 3,856 → about 2,630;
+  easy in the top 1,250 0.93 → 0.97. The two-question score alone 59.7 / 60.7; the once clues put into
+  the single model lower it (59.5 vs 60.4, seed 42); group smoothing of the product lowers it too. A
+  share of 25% to 50% for the two-question score is flat (62.0 vs 61.8, seed 42), so blending with
+  Violet's model, which halves its share, costs nothing.
+- **Why the 12:35 two-question test didn't carry over alone:** without the once-a-week-pair groups the
+  second model can't see a slow scheme's speed, so medium stays buried (58.8 on the combined clues).
+- **Test predictions:** `python -m src.predict_two_q` writes `outputs/predictions_two_q.csv`; reruns
+  byte-identical under a different Python hash seed. Upload candidate:
+  `python -m src.blend --run3 predictions_two_q.csv --violet predictions_violet_v2_fixed.csv --out
+  predictions_blend_two_q_violet.csv`, built exactly like the 66.7 file. Both pass the checker. Rank
+  correlation with the 66.7 file 0.975; top-401 overlap 380, so the change is mostly below rank 400,
+  where medium lives (the leaderboard panel's top-1% bars won't show it).
+- **Risk:** the test week has fewer very fast scheme-like groups than training (gap ≤60s: 24 vs 43),
+  which fits the README's "batch variations"; the 50/50 blends keep the single models as a safety net.
+- **Leaderboard:** not uploaded yet.
+- **Next if time:** better grouping for slow schemes. Once-pair groups at 30 minutes estimate a medium
+  scheme's gap at only 0.43-0.55 of its true value and leave 30% of medium payments ungrouped.
+
 ## External data
 
 Every dataset we use that didn't come from the organisers. Required by the organisers' rules
@@ -540,7 +595,8 @@ learning only and are not used by any of our code; see `prep/RESEARCH.md`.
   submission files with our `submission-check` skill, write `src/honest_eval.py`,
   `notebook_features.py`, `src/data.py`, `src/motifs.py`, `src/features.py`, `src/train.py`,
   `main.py`, `common.py`, `features_starter.py`, `graph.py`, `features_shapes.py`,
-  `src/predict_shapes_v2.py`, `tools/track_outputs.py`, `tools/check_zip_limits.py` and the
+  `src/predict_shapes_v2.py`, `src/predict_two_q.py` (and the label-structure and ceiling analysis
+  in the 13:45 entry), `tools/track_outputs.py`, `tools/check_zip_limits.py` and the
   release workflow `.github/workflows/release.yml`, and draft this log. Settings: default Claude
   Code configuration, no custom temperature or sampling parameters. Prompts: the conversation
   was interactive; the reusable prompts are the three skill files in `.claude/skills/`, which
