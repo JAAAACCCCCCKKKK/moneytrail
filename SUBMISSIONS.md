@@ -18,3 +18,4 @@
 | ~13:25 BST | 3fcf1fd → ea1300e | 62.5 | 66.7 (expected) | Attempt 16 re-uploaded as `moneytrail-best667-fixedcode-*` (same CSV, ZIP rebuilt with the structure code). Score to confirm |
 | ~13:25 BST | fe8c847 | 62.9 (folds 63.2 ± 5.3) | **66.7** | Attempt 17 (or 18): 70% combined model + 30% Violet, structure 0.4. Same as attempt 16: the blend share doesn't matter |
 | ~13:40 BST | b96a6fd | 62.6 (folds 62.6 ± 5.0) | **66.5** | Combined and structure models without the 25 conversion clues (`--no-conversion`). Below 66.7; dropped |
+| ~13:55 BST | 3572d05 | 63.7 (folds 64.3 ± 5.2, better than 62.5 in 5 of 5) | | Gate: combined probability × structure probability, + 10% Violet (`python3 -m src.blend --gate --weight 0.1 ...`, `outputs/predictions_gate_v10.csv`). Next: `predictions_gate.csv` (no Violet, 63.8), then `predictions_gate_v30.csv` |

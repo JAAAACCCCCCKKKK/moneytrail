@@ -16,6 +16,9 @@ fall on both sides inflates the score.
   **Fresh-clone check (13:35):** a new clone of GitHub `main` at `3b4ec60`, raw data only (no
   cache), running the four commands in the ZIP's `RUN_THIS_VERSION.md`, recreates all four files
   byte for byte, including the uploaded 66.7 CSV.
+- **Next candidate (13:50): the gate,** combined probability × structure probability + 10%
+  Violet (`predictions_gate_v10.csv`, commit `3572d05`): honest test 63.7 against 62.5, 5 of 5
+  folds. Leaderboard to confirm.
 - 66.4 (attempt 12): 50/50 blend of the combined model and Violet's fixed model, fully reproducible.
 - Earlier: 30% run 3 + 70% Violet 65.6 (Violet's old file can't be recreated, so not a safe final
   entry); 50/50 65.5; Violet v2 alone 65.1; run 3 62.0; Jack's candidate B 61.8 (dropped).
@@ -548,6 +551,60 @@ fall on both sides inflates the score.
 - **Leaderboard:** **66.5**, against 66.7 with the conversion clues. Dropped; the 66.7 version
   stays our final candidate.
 
+### ~13:40 — Where the 66.7 configuration still loses points, and what was ruled out (Alim, with Claude Code)
+- **Change:** analysis only, on the out-of-fold scores behind the 66.7 configuration (honest test
+  62.5, folds 62.7 ± 5.6, `main.py` folds). Labels used only to measure.
+- **Where the points are:** our top 1,250 holds 771 easy, 51 medium, 351 innocent shape look-alikes,
+  56 relay look-alikes and 21 background payments. Pushing every look-alike shape payment to the
+  bottom would add 13.6, but they can't be told apart (below). A perfect "planted scheme or not"
+  step would add 3.6, and perfect scheme grouping on top of that 1.2, so even then the training
+  week tops out near **67.3**.
+- **Ruled out:**
+  - *The structure model leaning on the conversion shift:* no. Retrained on the cached clues, it
+    takes 0.6% of its gain from the 25 conversion clues (structure AP 85.1 with them, 85.2
+    without), and it flags a similar share of payments in both weeks (probability above 0.5: 3.5%
+    of test, 3.2% of train out of fold).
+  - *A second model trained only on planted shape schemes ("two questions", 12:35), on the
+    combined clues:* within-shape AUC 0.804 against the combined model's 0.815; × structure 60.5.
+    Dropped.
+  - *Repeat business or wallet links:* guilty and look-alike shape schemes have the same share of
+    pairs seen elsewhere in the week (3.3% vs 3.8%), the same wallet activity and the same links to
+    other schemes (AUC 0.43-0.56). Wallets come from one shared pool.
+  - *Money flow order inside shape schemes:* guilty and look-alike schemes both pass money on
+    forward in time (96% vs 95% of middle-wallet payments come after a receipt).
+- **New finding, hard relays:** in all 12 cohorts the guilty relay moves money **forward** (each
+  middle wallet receives, then pays on less within hours), while **exactly half** of each cohort's
+  99 innocent siblings run **backwards** (the middle wallet pays out first and is topped up
+  afterwards). Within the forward half, nothing of 19 scheme properties separates the guilty one
+  (average percentiles 0.33-0.64). Pushing the backward relays to the bottom would add 1.7 (1.5 on
+  top of the gate below). But a per-payment version (sender funded just before, or topped up just
+  after, within 3-6 hours) separates forward from backward relays only weakly (AUC 0.57-0.61); it
+  needs averaging over the whole relay scheme (AUC 0.74-0.84), and relay schemes span the week
+  through busy wallets. Not built today; a lead for the write-up.
+- **Decision:** the reachable gain is in how the structure model is used (next entry).
+
+### ~13:50 — Gate: combined probability × structure probability (Alim, with Claude Code)
+- **Change:** `python3 -m src.predict_union --probabilities` writes probabilities instead of ranks
+  (intermediate files). `python3 -m src.blend --gate` multiplies the combined model's group-smoothed
+  probability by the structure model's probability, then optionally rank-mixes Violet's model
+  (`--weight`). The models themselves are unchanged: the probability files rank exactly like
+  `predictions_union.csv` and `predictions_structure.csv`.
+- **Why:** a payment needs both answers to be suspicious: part of a compact planted scheme, and
+  guilty-looking. A product lets a low structure score veto a relay or background payment; a 60/40
+  rank mix can't.
+- **Honest test** (`main.py` folds, out of fold for every model; against 62.5, folds 62.7 ± 5.6):
+  gate alone **63.8 (folds 64.4 ± 5.3, better in 4 of 5)**; gate + 10% Violet **63.7 (64.3 ± 5.2,
+  5 of 5)**; + 20% 63.4; + 30% 63.0 (63.5 ± 5.6, 4 of 5). Structure power 0.5: 63.5; 0.75: 63.7;
+  1.5: 63.7. Multiplying ranks instead of probabilities gives only 62.7; the unsmoothed combined
+  probability 62.4; smoothing the structure score as well 62.0.
+- **Test files:** `predictions_gate_v10.csv` (rank correlation 0.978 with the 66.7 file, 346 of the
+  top 401 shared), `predictions_gate.csv` (0.961, 340), `predictions_gate_v30.csv` (0.997, 349).
+  All pass the checker; rerun under a different hash seed, byte-identical. Commit `3572d05`; the
+  default blend path still recreates the 66.7 file byte for byte.
+- **Leaderboard:** not uploaded yet. Upload order: `gate_v10`, then `gate`, then `gate_v30`.
+- **Decision:** candidate. Next: add Jack's once-a-week-pair groups (`--once-groups`) to the
+  structure model only, since the structure step is where the remaining reachable points are.
+
 ## External data
 
 Every dataset we use that didn't come from the organisers. Required by the organisers' rules
@@ -568,8 +625,9 @@ learning only and are not used by any of our code; see `prep/RESEARCH.md`.
   submission files with our `submission-check` skill, write `src/honest_eval.py`,
   `notebook_features.py`, `src/data.py`, `src/motifs.py`, `src/features.py`, `src/train.py`,
   `main.py`, `common.py`, `features_starter.py`, `graph.py`, `features_shapes.py`,
-  `src/predict_shapes_v2.py`, `tools/track_outputs.py`, `tools/check_zip_limits.py` and the
-  release workflow `.github/workflows/release.yml`, and draft this log. Settings: default Claude
+  `src/predict_shapes_v2.py`, `tools/track_outputs.py`, `tools/check_zip_limits.py`, the
+  release workflow `.github/workflows/release.yml`, and the gate options in `src/blend.py` and
+  `src/predict_union.py`; run the 13:40 analysis of lost points and hard relays; and draft this log. Settings: default Claude
   Code configuration, no custom temperature or sampling parameters. Prompts: the conversation
   was interactive; the reusable prompts are the three skill files in `.claude/skills/`, which
   are kept in this repo.
