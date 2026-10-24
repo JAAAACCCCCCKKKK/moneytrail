@@ -685,6 +685,29 @@ fall on both sides inflates the score.
   clues. A 25% share is a small, consistent gain, below our 1.5-point rule; one leaderboard probe:
   `outputs/predictions_blend_recipe_gnn25.csv`. The 50% blend is not worth an upload.
 
+### ~15:05 — What makes a hard relay case laundering: the relay never pays out money it hasn't received (Jack, with Claude Code)
+- **Change:** analysis only, back to the raw training data. One laundering relay scheme printed next to
+  two siblings from its cohort: each is one central wallet in three episodes over the week. The
+  laundering wallet only ever passes on money it has already received in the scheme (305 in, 181 out;
+  334 in, 413 out; 666 in, 397 out). The honest ones pay out of their own funds: one receives 284 and
+  pays out 950, the other pays out 886 before anything arrives.
+- **First principles:** a launderer's relay wallet has no money of its own, so within the scheme its
+  running balance can never go negative; a real relay service runs on its own float and can pay first.
+  This is the deck's "rapid pass-through, little kept" and "flows that only make sense over the whole
+  week", measured on the scheme's whole-week cash flow instead of a 1-hour forwarding window.
+- **Evidence (true scheme grouping, 1,200 relay schemes, 12 laundering):** all 12 laundering schemes
+  never go negative; 29% of honest ones don't. Running-balance minimum AUC 0.80; "never negative,
+  keeps at most 5%, passes on 70-100%" keeps 11 of 12 laundering schemes and about 14 of 99 honest
+  ones per cohort, so each cohort narrows from 100 candidates to about 15. The 11:45 analysis compared
+  totals and counts, not the order of money in and out, which is why it found nothing.
+- **Why it isn't in the model:** the scheme is only 11% of its central wallet's week (about 110
+  payments), and its payments look like the rest (once-a-week pairs 34.5% vs 34.4%; 55% of the others
+  are relay payments too). Over the wallet's whole week the AUC falls to 0.61; per payment ("was this
+  payment covered by money received in the last 3/6/12 hours?") it is 0.48-0.57. Using it needs each
+  relay scheme reconstructed from wallet histories, which we couldn't build and test before the freeze.
+- **Next step with more time:** reconstruct relay schemes (one central wallet, episodes of collect then
+  disburse) and score each by its running balance; worth up to about 2-3 points if the grouping holds.
+
 ## External data
 
 Every dataset we use that didn't come from the organisers. Required by the organisers' rules
