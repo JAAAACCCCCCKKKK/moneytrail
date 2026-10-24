@@ -9,9 +9,10 @@ fall on both sides inflates the score.
 
 ## Where we are now (update this after every upload)
 
-- **Best leaderboard score: 65.5** (attempt 9, 50/50 blend of run 3 and Violet v2, commit
-  `b3b0d5a`, `python3 -m src.blend`). Top 1%: precision 92%, recall 30%. Violet v2 alone 65.1;
-  run 3 alone 62.0.
+- **Best leaderboard score: 65.6** (attempt 11, blend 30% run 3 + 70% Violet v2, commit
+  `65b3580`, `python3 -m src.blend --weight 0.7 --out predictions_blend_run3_violet70.csv`).
+  Top 1%: precision 93%, recall 30%. The 50/50 blend scored 65.5, Violet v2 alone 65.1, run 3
+  alone 62.0, Jack's candidate B 61.8 (dropped).
 - **Open problem for the final entry:** a fresh rerun of Violet's model on Alim's laptop differs
   from her committed file (rank correlation 0.96, 371 of the top 401 shared). The final upload
   must be a file our code reproduces, so this needs fixing (or the final file regenerated) by 15:30.
@@ -405,8 +406,45 @@ fall on both sides inflates the score.
 - **Next probe (~12:30):** Violet's share 70% (`python3 -m src.blend --weight 0.7`). The honest
   test is flat from 50% to 80% Violet (58.6, 58.5, 58.4, 58.3), but on the test week Violet's
   model alone beats run 3 by 3 points, so the leaderboard decides the weight.
+  **Result:** attempt 11, **65.6** (+0.1 on 50/50). The weight barely matters; blending these two
+  models is used up.
 - **Decision:** upload the 50/50 blend as run 8. Violet's own blend file
   (`predictions_blend_violetv2_jackv3.csv`) uses run 4's model, which scored worse; don't upload it.
+
+### ~12:35 — Two questions instead of one: "part of a planted scheme?", then "suspicious?" (Alim, with Claude Code)
+- **Change:** experiment only (scripts not in the repo yet). The single model is replaced by two
+  LightGBM models on the same clues: (1) trained on every row to say whether a payment belongs
+  to a planted shape scheme, suspicious or decoy (any family except background, the two relay
+  families and ambiguous); (2) trained only on shape-scheme rows to say `is_suspicious`.
+  Score = (1) × (2), then the usual smoothing. `family` is a training target only, never a
+  clue, and both models are refit inside every fold.
+- **Why:** on run 2's honest-test scores, the top 3,000 holds 1,375 innocent relay and 386
+  background payments, and 104 easy and 202 medium cases sit below rank 1,250. Pushing every
+  non-scheme payment to the bottom (labels used only to measure the ceiling) gives 66.3 against
+  54.9. The single model has to learn "relay-like is 1% suspicious" from 200 positives among
+  20,000; the scheme model gets a clean answer for every relay and background row, and the
+  second model only has to tell schemes from their look-alikes.
+- **Honest test, run 3's pipeline** (`main.py` folds, same clues, model, group smoothing and
+  0.75 / 0.25 rank blend; only the target changes): seed 42 56.8 → **58.3** (folds 57.1 → 59.1,
+  better in 4 of 5); seed 7 57.3 → **59.6** (58.2 → 60.1, 4 of 5); seed 2026 56.7 → **58.9**
+  (57.9 → 60.2, 5 of 5). Easy in the top 1,250 89-92% → 94%; medium unchanged at 12%.
+- **Honest test, `src.train`** (run 2's 135 clues, three-scale smoothing): team folds 54.9 →
+  59.2 (5 of 5); seed 7 57.9 → 59.6 (5 of 5); seed 2026 57.2 → 58.1 (4 of 5). Against only
+  not learning from the 225 hard and ambiguous positives (12:00): 56.4, 57.8, 57.2 → 59.2,
+  59.6, 58.1, better in 13 of 15 folds, so the gain is not just that effect (which didn't carry
+  over to run 3's pipeline).
+- **Also checked:** one-off-pair groups (a pair that occurs once in the week, either direction)
+  at 30 and 60 minutes, Jack's 12:15 idea, added on top of the two questions on `src.train`:
+  +0.9, +1.2, +1.0. Jack measured +0.1 to +0.7 on run 3's pipeline, so it's not counted here.
+  Unused raw fields have no signal: `SEQUENCE` starts at 1 for every wallet, `LAST_LEDGER_SEQUENCE`
+  is always the ledger + 20, fees (10, 12, 15 drops) and `TRANSACTION_INDEX` have the same mix
+  for suspicious and innocent, `FLAGS` is always 0.
+- **Leaderboard:** not uploaded.
+- **Decision:** candidate. Clears our rule (more than 1.5 points, at least 4 of 5 folds) on all
+  three seeds on run 3's pipeline. Next: the same split inside Violet's detector v2 (the
+  stronger model on the test week), then redo the blend. Risk: the test week has "batch
+  variations absent from training", and a kind of scheme the scheme model doesn't recognise
+  would be pushed down hard by the multiplication.
 
 ## External data
 
