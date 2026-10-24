@@ -8,6 +8,8 @@ __pycache__/
 data/
 *.parquet
 *.csv
+# ...except our prediction results, which we track (see OUTPUTS.md)
+!outputs/*.csv
 *.pkl
 *.model
 

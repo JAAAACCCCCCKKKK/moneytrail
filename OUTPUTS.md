@@ -1,7 +1,7 @@
 # Outputs ledger
 
-Every predictions file we have produced, whether or not it was uploaded. The CSVs live
-in `outputs/`, which git ignores; this table is the tracked record. Update it with
+Every predictions file we have produced, whether or not it was uploaded. The CSVs are
+committed in `outputs/` but left out of the release code ZIP (see `.gitattributes`). Update it with
 `python tools/track_outputs.py` after writing a file. Rows are keyed by SHA-256, so a
 regenerated file gets a new row. "Check" is the `submission-check` result against all
 40,101 test transactions. Leaderboard scores and the commit behind each upload live in

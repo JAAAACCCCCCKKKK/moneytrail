@@ -1,8 +1,8 @@
 """Keep OUTPUTS.md up to date: one row per predictions file we have produced.
 
-The CSVs themselves stay out of git (outputs/ is ignored); this ledger is what we
-commit, so anyone can tell which file is which, whether it passed the checker,
-and where it came from. Rows are keyed by the file's SHA-256, so a regenerated
+The CSVs are committed in outputs/ (but left out of the release code ZIP, see
+.gitattributes); this ledger says which file is which, whether it passed the
+checker, and where it came from. Rows are keyed by the file's SHA-256, so a regenerated
 file gets a new row and the old one stays as history. The Notes column is
 hand-written and is preserved across updates.
 
@@ -32,8 +32,8 @@ COLUMNS = ["File", "Written (UTC)", "Rows", "Distinct scores", "SHA-256", "Check
 
 HEADER = """# Outputs ledger
 
-Every predictions file we have produced, whether or not it was uploaded. The CSVs live
-in `outputs/`, which git ignores; this table is the tracked record. Update it with
+Every predictions file we have produced, whether or not it was uploaded. The CSVs are
+committed in `outputs/` but left out of the release code ZIP (see `.gitattributes`). Update it with
 `python tools/track_outputs.py` after writing a file. Rows are keyed by SHA-256, so a
 regenerated file gets a new row. "Check" is the `submission-check` result against all
 40,101 test transactions. Leaderboard scores and the commit behind each upload live in
