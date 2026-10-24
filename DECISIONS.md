@@ -644,6 +644,24 @@ fall on both sides inflates the score.
 - **Learned linker on the leaderboard:** 66.4-66.8 (reported by Jack), below 67.1. Dropped, as the
   honest test suggested.
 
+### ~14:45 — Self-training on the test week, on the 67.1 recipe (Jack, with Claude Code)
+- **Change:** `python -m src.predict_two_q --self-train` (the default output is unchanged, byte for
+  byte). After scoring the test week, our own top 2% become pseudo-suspicious and the bottom 50%
+  pseudo-innocent, at half weight: added to the combined model, to the scheme model (as scheme / not
+  scheme) and, the pseudo-suspicious only, to the scheme-only model; then all three are refit and the
+  week is scored again. Only our own predictions, never test answers.
+- **Why:** the README warns of batch variations absent from training (the test week has fewer very
+  fast scheme groups), and the scoring punishes false alarms near the top most.
+- **Honest test** (each held-out fold plays the unseen week; recipe → self-trained, pooled / fold
+  mean): seed 42 61.9 / 62.0 → 62.4 / 62.7 (3 of 5 folds better); seed 7 62.9 / 63.7 → 63.4 / 63.4
+  (2 of 5); seed 2026 62.1 / 63.4 → 63.1 / 64.0 (3 of 5). Average +0.7 pooled, +0.3 fold mean, 8 of 15.
+  Precision in the top 400 rose on every seed: 0.835 → 0.875, 0.833 → 0.855, 0.810 → 0.860.
+- **Decision:** below our 1.5-point rule, but the cleaner top is consistent and the top is where the
+  score is decided, so it gets one leaderboard probe:
+  `outputs/predictions_blend_two_q_selftrain_violet.csv` (blended with Violet's model like the 67.1
+  entry; rank correlation with the reproducible 67.1 rebuild 0.988, 371 of the top 402 shared).
+- **Leaderboard:** not uploaded yet.
+
 ## External data
 
 Every dataset we use that didn't come from the organisers. Required by the organisers' rules
