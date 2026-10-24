@@ -211,6 +211,48 @@ fall on both sides inflates the score.
 - **Decision:** every external dataset gets a row in the "External data" section below, kept
   up to date whether or not it helped, so the method write-up can report it honestly.
 
+### ~11:50 — Where run 3 loses points: medium schemes are slow, and some honest ones are fast (Jack)
+- **Change:** analysis, then one small change (run 4 candidate below).
+- **Where the points are** (run 3 configuration, `main.py` folds, honest test 56.8): moving every
+  easy case to the top would give 71.5; moving every medium case to the top would give 73.9. So
+  the 225 medium cases are worth more than the 800 easy ones. Easy cases already sit in our top
+  3% (median position top 1-2%); medium cases sit at a median of the top 10-22%.
+- **Why medium ranks low:** medium schemes are the same shapes as easy ones run in slow motion.
+  Scheme medians: easy, a gap of 60s between payments over 5 minutes; honest look-alikes, 572s
+  over an hour; medium, **1,066s over 110 minutes**, often with 2 currencies against 1. They are
+  slower than honest activity, so every tempo clue pushes them down, and our widest wallet-group
+  window (10 minutes) covers only 25% of a medium scheme.
+- **Tried for medium, no signal** (each scored alone against all honest payments, chance 0.006;
+  against honest look-alike shapes, chance 0.17, every one stayed between 0.17 and 0.23): all 187
+  existing clues (best 0.032); neighbourhood closure at 30, 60 and 120 minutes (share of traffic
+  around the sender and receiver that stays in their small circle, circle size, currencies, pace);
+  "out of character" amounts against the wallet's own week (FATF red flag 5) and quiet wallets;
+  slow peel chains with currency hopping (XRPL deck); structuring under round limits (the
+  amount distributions of medium and honest shapes match). Wider union-find windows recover
+  medium schemes (100% at 30 minutes) but chain 57% of all payments into groups over 100.
+- **Why some honest schemes are false alarms:** the top 3% holds 726 suspicious and 478 honest
+  payments. All 17 honest shape schemes that move as fast as laundering (12% of honest
+  look-alikes, median gap under 2 minutes) land in the top 3%; by tempo they cannot be told
+  apart. The other 225 false alarms are background and relay payments.
+- **Smoothing variants, no gain:** group weight 0.1 or 0.4 instead of 0.25 (within 0.1); group
+  maximum (-2.7) or top-3 mean (-3.5) instead of the mean.
+- **Run 4 candidate:** run 3 plus a 20-minute group window (covers 67% of a medium scheme before
+  groups merge) and 6x training weight on medium suspicious rows (a training weight from the
+  `difficulty` label, never a clue). Honest test against run 3, three fold seeds (fold mean, all
+  folds together): seed 42 57.7 vs 56.5 (57.5 vs 55.8); seed 7 58.3 vs 58.1 (58.2 vs 57.0); seed
+  2026 57.8 vs 57.5 (56.9 vs 56.5). Medium cases in the top 5%: 0.23 vs 0.20, 0.20 vs 0.16,
+  0.20 vs 0.19. Small, but better on every seed.
+- **Test predictions:** `python -m src.predict_shapes_v2 --windows 120 300 600 1200
+  --medium-weight 6 --out predictions_shapes_v3.csv`; passes the checker; rank correlation with
+  run 3 0.842, top-401 overlap 358. Run 3 itself still reproduces byte for byte with the defaults.
+- **Leaderboard:** not uploaded.
+- **Decision:** worth one upload to confirm; keep run 3 as the reference if it doesn't beat 62.0.
+
+### ~12:10 — Hard relays: history and whole-scheme tests, nothing separates them (Alim)
+- **Change:** analysis only. Tested per-payment history ideas on the 200 suspicious relay payments against their ~20,000 innocent look-alikes: amount equals the sum of the sender's last 2-12 incoming (same asset); amount is part of a split of an earlier receipt; amount equals an earlier receipt forwarded intact after an hour; days since the sender's previous payment. All at chance (AP 0.010 against 0.010 chance).
+- **Structure found:** the hard cases are 12 schemes (6 aggregate, 6 distributed relays), about 14-16 payments each, spanning the whole week (~133 h) across 10-12 wallets. Each sits in a cohort of 100 same-shaped schemes, 1 laundering and 99 innocent. Comparing each laundering scheme with its 99 siblings on 18 scheme-level properties (wallets, sources, sinks, USD total and spread, gaps, timing, assets, conversions, round amounts, night and weekend share, repeat pairs), every average percentile sits between 0.30 and 0.74, and at most 2 of the 12 are extreme on any one property. This matches Jack's 10:00 finding.
+- **Decision:** stop spending time on the hard relays. They look designed to be indistinguishable from what's observable (as the README warns, some hard cases have labels independent of observable features). The remaining points are in ranking easy and medium cases above innocent look-alikes, so Natasha moves to studying the easy and medium cases we still rank low.
+
 ## External data
 
 Every dataset we use that didn't come from the organisers. Required by the organisers' rules
