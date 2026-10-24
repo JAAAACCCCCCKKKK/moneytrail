@@ -14,8 +14,8 @@ fall on both sides inflates the score.
   `outputs/predictions_gate_v10.csv`). Code `3572d05`, uploaded with the ZIP of `00f0096` (log
   commits only on top), which carries `RUN_THIS_VERSION.md` with the four commands. Honest test 63.7
   against 62.5; leaderboard +1.1 on 66.7. Top 1%: precision 96%, recall 31%.
-- **Next probe (14:10): gate 2,** Jack's signals model × his scheme model + 10% Violet
-  (`outputs/predictions_gate2_v10.csv`): honest test 64.2 against 63.7. See the 14:10 entry.
+- **Gate 2 (14:10) dropped:** Jack's signals model × his scheme model + 10% Violet scored 66.4
+  (honest test 64.2). 67.8 stays the final entry.
 - **67.1 (Jack's two questions, branch `dynamic`, commit `ed19b17`, merged into `main` at
   ~14:10; can't be recreated exactly, see 14:10):** P(planted scheme) × P(suspicious | scheme) on the combined clues + deck signals +
   once-a-week-pair groups, rank-blended 50/50 with the combined model + signals, then 50/50 with
@@ -758,11 +758,11 @@ fall on both sides inflates the score.
   multiplying in his "suspicious given a scheme" model as well 63.2-64.7.
 - **Test files:** `predictions_gate2_v10.csv` (rank correlation 0.936 with the 67.8 file, 360 of the
   top 401 shared) and `predictions_gate2_v0.csv` (0.929, 359). Both pass the checker.
-- **Leaderboard:** not uploaded yet. Upload `gate2_v10` first (Violet's 10% was worth +0.2 on the
-  leaderboard for gate 1), then `gate2_v0`.
-- **Decision:** candidate, but below our rule (+0.5 to +0.7, not more than a point): an upload
-  probe only, since only the best upload counts. The 67.8 version stays the safe final entry
-  unless gate 2 beats it.
+- **Leaderboard:** `gate2_v10` uploaded 13:14 UTC: **66.4**, against 67.8 (−1.4, although the honest
+  test had it +0.5). Top 1%: precision 92% (96% for 67.8), recall 30%; easy 50%, medium 0% (10%).
+- **Decision:** dropped. Jack's deck signals and once-a-week-pair groups don't carry over to the
+  test week inside the gate. The 67.8 version (`predictions_gate_v10.csv`) stays the final entry;
+  its commands still recreate it byte for byte on the merged `main`. `gate2_v0` not uploaded.
 
 
 ## External data
