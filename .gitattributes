@@ -1,0 +1,4 @@
+# Prediction results are tracked in git (see OUTPUTS.md) but left out of the code ZIP
+# that `git archive` builds for each release: the organisers want code in the ZIP, the
+# CSV is uploaded separately, and each one adds about 1.8 MiB against the 8 MiB limit.
+outputs/*.csv export-ignore
