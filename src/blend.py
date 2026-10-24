@@ -40,6 +40,34 @@ def rank01(s: pd.Series) -> pd.Series:
     return s.rank() / len(s)
 
 
+SMOOTH_SCALES = (120, 300, 600, 900)
+
+
+def smooth_gate(gated: pd.Series, hashes: pd.Series, weight: float, week: str) -> pd.Series:
+    """Blend each payment's gate score (log scale) with the mean gate score of its gap clusters.
+
+    A gap cluster joins payments that share a wallet within G seconds (detector/clusters.py), at
+    2, 5, 10 and 15 minutes. Labels are pure per scheme, so a payment whose cluster-mates look
+    guilty is lifted, and an isolated burst inside an innocent cluster is pulled down. Done on
+    the log probabilities, before ranking: on ranks it hurts (Violet, 14:35).
+    """
+    import sys
+    import common
+    sys.path.insert(0, str(common.ROOT / "detector"))
+    from base import load                      # Violet's loader (same table as detector/)
+    from clusters import gap_clusters
+    base, _ = load(common.ROOT / "data" / week)
+    base = base.sort_values(["TIMESTAMP", "TRANSACTION_INDEX"], kind="mergesort").reset_index(drop=True)
+    T = base.TIMESTAMP.to_numpy(np.int64); S = base.ACCOUNT.to_numpy(); R = base.DEST.to_numpy()
+    g = gated.set_axis(hashes.to_numpy()).loc[base.TRANSACTION_HASH].to_numpy()
+    cluster_mean = np.zeros(len(g))
+    for G in SMOOTH_SCALES:
+        ids = gap_clusters(T, S, R, G)
+        cluster_mean += pd.Series(g).groupby(ids).transform("mean").to_numpy() / len(SMOOTH_SCALES)
+    smoothed = pd.Series((1 - weight) * g + weight * cluster_mean, index=base.TRANSACTION_HASH.to_numpy())
+    return smoothed.loc[hashes.to_numpy()].reset_index(drop=True)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--run3", default="predictions_shapes_v2.csv", help="file inside outputs/")
@@ -52,6 +80,9 @@ def main():
                         help="multiply the --run3 file's probability by the --structure file's probability "
                              "(both from src.predict_union --probabilities) instead of mixing ranks")
     parser.add_argument("--gate-power", type=float, default=1.0, help="power on the structure probability")
+    parser.add_argument("--smooth", type=float, default=0.0,
+                        help="with --gate: share of the multi-scale gap-cluster mean in the gate score (e.g. 0.2)")
+    parser.add_argument("--week", default="test-data", help="data/<week> the files score (for --smooth)")
     parser.add_argument("--out", default="predictions_blend_run3_violet.csv", help="file name inside outputs/")
     args = parser.parse_args()
     if args.gate and not args.structure:
@@ -67,6 +98,8 @@ def main():
         st = st.reset_index(drop=True)
     if args.gate:
         gated = np.log(d.score_run3.clip(1e-9, 1)) + args.gate_power * np.log(st.clip(1e-9, 1))
+        if args.smooth > 0:
+            gated = smooth_gate(gated, d.TRANSACTION_HASH, args.smooth, args.week)
         blended = (1 - args.weight) * rank01(gated) + args.weight * rank01(d.score_violet)
     else:
         blended = (1 - args.weight) * rank01(d.score_run3) + args.weight * rank01(d.score_violet)
@@ -76,7 +109,7 @@ def main():
     out = pd.DataFrame({"TRANSACTION_HASH": d.TRANSACTION_HASH, "score": score})
     out.to_csv(OUTPUTS / args.out, index=False)
     if args.gate:
-        extra = f", gated by structure^{args.gate_power}"
+        extra = f", gated by structure^{args.gate_power}" + (f", smoothed {args.smooth}" if args.smooth else "")
     else:
         extra = f", structure weight {args.structure_weight}" if args.structure else ""
     print(f"wrote {len(out):,} blended scores to {OUTPUTS / args.out} (Violet weight {args.weight}{extra})")
