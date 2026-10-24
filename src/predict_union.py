@@ -65,6 +65,9 @@ def main():
     parser.add_argument("--no-conversion", action="store_true",
                         help="drop the 25 conversion clues (13 Jack's, 12 Violet's): the one clear train-to-test "
                              "shift (41%% to 51%% conversions), and the README says asset choices ignore the labels")
+    parser.add_argument("--probabilities", action="store_true",
+                        help="write the model's probabilities instead of ranks, for src.blend --gate "
+                             "(an intermediate file, never uploaded: probabilities can tie)")
     parser.add_argument("--out", default=None, help="file name inside outputs/")
     args = parser.parse_args()
     out_name = args.out or ("predictions_union.csv" if args.target == "suspicious" else "predictions_structure.csv")
@@ -97,7 +100,10 @@ def main():
         raw = make_model("lgbm").fit(U, lab.is_suspicious.to_numpy()).predict_proba(Ut)[:, 1]
         test_pay = test[["TRANSACTION_HASH"]].merge(common.payments("test"), on="TRANSACTION_HASH")
         final = graph.smooth_by_group(raw, test_pay, "test")
-    score = pd.Series(final).rank(method="first").to_numpy() / len(final)   # no ties
+    if args.probabilities:
+        score = final
+    else:
+        score = pd.Series(final).rank(method="first").to_numpy() / len(final)   # no ties
 
     out = pd.DataFrame({"TRANSACTION_HASH": test.TRANSACTION_HASH, "score": score})
     OUTPUTS.mkdir(exist_ok=True)
